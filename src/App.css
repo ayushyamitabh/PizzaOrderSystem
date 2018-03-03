@@ -1,0 +1,11 @@
+.title-bar {
+    padding: 15px !important;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center;
+    user-select: none;
+}
+.title {
+    flex: 1 !important;
+    color: white !important;
+}
