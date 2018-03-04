@@ -20,27 +20,39 @@ Reach us at tagmhaxt@gmail.com
 Make sure to have Node.JS and NPM installed. Download [here](https://nodejs.org/en/), go for LTS.
 ##### Local Development:
 1. Clone this git and go to directory:
+
 ``
 $ git clone https://github.com/ayushyamitabh/PizzaOrderSystem.git && cd PizzaOrderSystem
 ``
+
 2. To install all dependencies 
+
 ``
  $ npm install
 ``
+
 3. To start local hosting (will start on ``localhost:3000``)
+
 ``
 $ npm start
 ``
+
 4. If you want to install a new dependency make sure to use the ``save`` tag:
+
 `` $ npm install --save <package_name>``
+
 5. To push your changes:
+
 ``
 $ git add .
 ``  Only if you added new files
+
 ``
 $ git commit -m "<commit message>"
 ``
+
 ``
 $ git push origin master
 ``
+
 ----
