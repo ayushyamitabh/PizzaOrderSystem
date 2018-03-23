@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import {
-    Button,    
+    Button,
     Dialog,
     DialogActions,
     DialogContent,
@@ -16,7 +16,7 @@ class LoginDialog extends Component {
     constructor(props) {
         super(props);
         this.state = {
-            email: '',
+            username: '',
             password: ''
         };
     }
@@ -25,22 +25,22 @@ class LoginDialog extends Component {
             <Dialog className="login-dialog" open={this.props.openUp} data-aos="fade">
                 <DialogTitle className="login-dialog-title">
                     <span style={{flex:'1 1 auto'}}>Sign-In</span>
-                    <IconButton onClick={this.props.closeDialog} ><Close /></IconButton>                    
+                    <IconButton onClick={this.props.closeDialog} ><Close /></IconButton>
                 </DialogTitle>
                 <DialogContent>
                     <DialogContentText>
                         Login to your Weirdough account.
                     </DialogContentText>
-                    <TextField 
+                    <TextField
                         style={{marginTop:'10px'}}
-                        id="email"
+                        id="username"
                         autoFocus={true}
-                        label="E-Mail"
-                        type="email"
+                        label="Username"
+                        type="username"
                         fullWidth
-                        value={this.state.email}
+                        value={this.state.username}
                     />
-                    <TextField 
+                    <TextField
                         style={{marginTop:'10px'}}
                         id="password"
                         label="Password"
@@ -48,14 +48,14 @@ class LoginDialog extends Component {
                         fullWidth
                         value={this.state.password}
                     />
-                    <Button 
+                    <Button
                         style={{marginTop:'10px'}}
                         variant="raised"
                         color="primary"
                         fullWidth>
                         SIGN IN
                     </Button>
-                    <Button 
+                    <Button
                         style={{marginTop:'10px'}}
                         variant="raised"
                         color="secondary"
