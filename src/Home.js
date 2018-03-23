@@ -22,7 +22,7 @@ class Home extends Component {
             <div style={{height:'100%'}}>
                 <LoginDialog openUp={this.state.loginDialog} closeDialog={()=>{this.setState({loginDialog:false})}}/>
                 <AppBar className="title-bar">
-                    <Typography variant="title" className="title">WEIRDOUGHS test for tobias</Typography>
+                    <Typography variant="title" className="title">WEIRDOUGHS</Typography>
                     <IconButton color="inherit" onClick={()=>{this.setState({ loginDialog: true })}}><AccountIcon /></IconButton>
                 </AppBar>
             </div>
