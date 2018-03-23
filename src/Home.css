@@ -4,8 +4,14 @@
     flex-direction: row !important;
     align-items: center;
     user-select: none;
+    margin: 0 auto !important;
+    top: 10px !important;
+    position: sticky !important;
+    width: 95% !important;
+    background: rgb(95, 178, 206) !important;
 }
 .title {
     flex: 1 !important;
     color: white !important;
+    padding-left: 5px;
 }
