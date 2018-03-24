@@ -15,6 +15,10 @@ Reach us at tagmhaxt@gmail.com
 
 1. [Phase 1 Report - Software Requirements & Description](https://github.com/ayushyamitabh/PizzaOrderSystem/blob/master/documentation/Weirdoughs%20Phase%201%20Report.pdf)
 
+2. [Progress Chart](https://docs.google.com/spreadsheets/d/1uGcj45iaUilKQ4BIbSX6dWoCYEBxp1VJSPkyjYHKs4k/edit?usp=sharing)
+
+3. [Database Structure](https://docs.google.com/document/d/1XEjxozfXlOg526gSIBe-AMfRXbhiYvclg5E-Yv1Tk1M/edit?usp=sharing)
+
 ----
 #### Externals:
 
