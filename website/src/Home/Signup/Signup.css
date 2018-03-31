@@ -1,0 +1,12 @@
+.signup-page{
+    padding: 5% 20%;
+}
+.signup-title-bar{
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+    align-items: flex-start;
+}
+.push-down{
+    margin-top: 10px !important;
+}

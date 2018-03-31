@@ -1,0 +1,54 @@
+*{
+    user-select: none !important;
+}
+.home-page{
+    height: 100%;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    overflow: hidden;
+}
+.home-pane:hover{
+    transform: scale(1.01);
+}
+.title-bar{
+    max-height: 35%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    padding-top: 80px;
+}
+.title-bar img{
+    max-height: 200px;
+    width: auto;
+    margin-left: -5%;
+}
+.title-bar .title{
+    color: rgb(172, 58, 58);
+}
+.login-form{
+    width:  50%;
+    margin: 0 10px;
+}
+.login-form-content{
+    padding: 50px !important;
+    padding-top: 0 !important;
+}
+.username, .password, .login {
+    margin-top: 10px !important;
+}
+.signup-line{
+    padding-top: 10px !important;
+}
+.login-form-header{
+    padding: 50px !important;
+    padding-bottom: 0 !important;
+}
+.home-page-content{
+    display: flex;
+    flex-direction: row;
+    width: 80%;
+    margin-top: 40px;
+    max-height: 55%;
+}
