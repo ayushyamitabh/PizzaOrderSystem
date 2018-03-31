@@ -1,5 +1,6 @@
 .signup-page{
     padding: 5% 20%;
+    padding-bottom: 0 !important;
 }
 .signup-title-bar{
     display: flex;
