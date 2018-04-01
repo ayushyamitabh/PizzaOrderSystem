@@ -22,57 +22,43 @@ import FileUpload from 'material-ui-icons/CloudUpload';
 import Done from 'material-ui-icons/CheckCircle';
 import * as firebase from 'firebase';
 
-
 export default class AddShop extends Component{
-    constructor(props) {
-        super(props);
-        this.state = {
-            
-        }
-    };
-    
-    
     render() {
-        return(  
-             
-           
-            <div className="addShop-page">   
-                <div className="addShop-title-bar">
-                    <Typography variant="display2">
-                       Weirdoughs | Add-Shop
+        return(
+            <div  className="signup-page">
+             <div className="AddShop-title-bar">
+                 <Typography variant="display2">
+                       Weirdoughs | Add Shop
                     </Typography>
                     <Typography variant="subheading" style={{marginTop:'10px'}}>
-                        Add a new shop below!
+                        Add A Shop Below!
                     </Typography>
-                </div>       
-                <Divider />
-            
-           
-             <Typography style={{marginTop:'10px'}} variant="subheading"> 
-                <Card style={{marginTop:'10px'}} data-aos="slide-up">
-                 <CardContent>
-            <TextField                             
-                label="Shop"
-                type="Shop"
-                id="Shop"
-                required
-                fullWidth
-                className="push-down"
-                                />
-            <Button fullWidth 
-                variant="raised" 
-                color="primary" 
-                className="push-down">
-                Go
-            </Button>
-            
-            </CardContent>
-            </Card>
-            </Typography>
-          
-      
             </div>
+          <Divider />
+            <FormControl fullWidth style={{marginTop:'10px'}}> </FormControl>
+                <div className="signup-page-content">
+                    <Typography style={{marginTop:'10px'}} variant="subheading"> 
+                        <Card style={{marginTop:'10px'}} data-aos="slide-up">
+                            <CardContent>
+                                 <TextField              
+                                     id="addShop"
+                                      label="Add Shop"
+                                      required                           
+                                      fullWidth
+                                      className="push-down"/>
+                                    <Button
+                                    className="push-down" 
+                                    fullWidth 
+                                    variant="raised" 
+                                    color="primary">
+                                    Go!
+                                </Button>
             
+                            </CardContent>                                 
+                        </Card>
+                    </Typography>
+                </div>         
+            </div>
         );
     }
 }

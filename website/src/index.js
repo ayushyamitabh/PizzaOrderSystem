@@ -13,7 +13,7 @@ var config = {
     authDomain: "pos-tagmhaxt.firebaseapp.com",
     databaseURL: "https://pos-tagmhaxt.firebaseio.com",
     projectId: "pos-tagmhaxt",
-    storageBucket: "",
+    storageBucket: "pos-tagmhaxt.appspot.com",
     messagingSenderId: "455987530569"
 };
 firebase.initializeApp(config);

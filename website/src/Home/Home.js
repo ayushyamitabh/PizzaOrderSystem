@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Link } from 'react-router-dom'
+import { Link } from 'react-router-dom';
 import './Home.css';
 import {Avatar,
         Button,
@@ -53,6 +53,12 @@ class Home extends Component {
                             const userType = snap.val();
                             if (userType === 'customer') {
                                 this.props.history.push(`/customer/home`);
+                            } else if (userType === 'cook'){                                
+                                this.props.history.push(`/cook/home`);
+                            } else if (userType === 'deliverer'){                                
+                                this.props.history.push(`/deliverer/home`);
+                            } else if (userType === 'manager'){                                
+                                this.props.history.push(`/manager/home`);
                             }
                         } else {
                             this.setState({
