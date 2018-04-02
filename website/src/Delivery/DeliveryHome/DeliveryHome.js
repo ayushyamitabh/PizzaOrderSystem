@@ -18,18 +18,36 @@ import {Avatar,
         TextField, 
         Typography } from 'material-ui';
 import {AppBar, Tabs, Tab} from 'material-ui'
+import Toolbar from 'material-ui/Toolbar';
+import { withStyles } from 'material-ui/styles';
+
+
 
 class DeliveryHome extends Component{
  
+    
+    
+    
     render() {
+        
+        var style = {
+         color: 'white',
+         float: 'right',
+        };
+        
         return ( 
             <div>
                 <AppBar> 
-             
-                    <Button
-                    component={Link} to="" onClick={()=>{firebase.auth().signOut()}}> Logout
-                    </Button>
-                  
+                    <Toolbar>
+                        <Typography variant="title" color="inherit">
+                                Deliverer
+                            <Button color ="secondary" variant = "raised" style= {style}
+                        
+                                component={Link} to="" onClick={()=>{firebase.auth().signOut()}}> Logout
+                            </Button>
+                        </Typography>
+                    </Toolbar>
+                    
             </AppBar>
             </div>
         );

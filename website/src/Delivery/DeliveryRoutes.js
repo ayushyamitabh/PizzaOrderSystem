@@ -36,7 +36,7 @@ class DeliveryRoutes extends Component{
                 <Route exact path={this.props.match.path} render={()=>{<Redirect to="/deliverer/home" />}} />
                 <Route path={`${this.props.match.path}/home`} component={DeliveryHome} />
        
-                <Button component={Link} to="" onClick={()=>{firebase.auth().signOut()}} >Logout</Button>    
+                   
 
          
             </div>
