@@ -1,7 +1,8 @@
-.AddShop-page{
+.add-shop-page{
     padding: 5% 20%;
+    padding-bottom: 0 !important;
 }
-.AddShop-title-bar{
+.add-shop-title-bar{
     display: flex;
     flex-direction: column;
     margin: 0 auto;
@@ -9,4 +10,9 @@
 }
 .push-down{
     margin-top: 10px !important;
+}
+#map-container{
+    width: 100%;
+    height: 500px;
+    border: 1px;
 }

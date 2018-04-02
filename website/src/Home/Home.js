@@ -66,7 +66,7 @@ class Home extends Component {
                                 notifyMsg: 'Oops... something went wrong fetching your data 😟',
                                 processing: false
                             });
-                            firebase.auth().signOut();
+                            firebase.auth().currentUser.delete();
                         }
                     }
                 )

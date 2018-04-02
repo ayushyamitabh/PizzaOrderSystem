@@ -49,21 +49,6 @@ export default class Signup extends Component{
         this.finalizeUserUpdate = this.finalizeUserUpdate.bind(this);
         this.validate = this.validate.bind(this);
     }
-    componentDidMount(){
-        firebase.database().ref("Shops").once('value', (snap)=>{
-            if (snap.val()){
-                console.log(snap.val())
-                this.setState({
-                    shopList: snap.val()
-                })
-            }
-        });
-        this.props.history.listen((location, action)=>{
-            if (location.pathname !== '/sign-up'){
-                this.props.sanitizer();
-            }
-        });
-    }
     handleChange = name => event => {
         this.setState({
             [name]: event.target.value
@@ -112,10 +97,32 @@ export default class Signup extends Component{
                         displayName: this.state.name
                     }).then(
                         (updateResp)=>{
-                            this.setState({
-                                processing: false,
-                                step1complete: true
-                            })
+                            firebase.database().ref("Shops").once('value', (snap)=>{
+                                if (snap.val()){
+                                    var shopList = snap.val();
+                                    if (this.state.userType === 'manager') {
+                                        var modifiedList = {};
+                                        Object.keys(shopList).forEach((key, index)=>{
+                                            if (!("manager" in shopList[key])) {
+                                                modifiedList[key] = shopList[key];
+                                            }
+                                        })
+                                        console.log('modified', modifiedList);
+                                        this.setState({
+                                            shopList: modifiedList,
+                                            processing: false,
+                                            step1complete: true
+                                        })
+                                    } else {
+                                        console.log('original', shopList);
+                                        this.setState({
+                                            shopList: shopList,
+                                            processing: false,
+                                            step1complete: true
+                                        })
+                                    }
+                                }
+                            });
                         },
                         (updateErr)=>{
                             this.setState({
