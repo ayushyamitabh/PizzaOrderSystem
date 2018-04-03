@@ -17,39 +17,38 @@ import {Avatar,
         Snackbar, 
         TextField, 
         Typography } from 'material-ui';
-import {AppBar, Tabs, Tab} from 'material-ui'
+import AppBar from 'material-ui/AppBar';
 import Toolbar from 'material-ui/Toolbar';
-import { withStyles } from 'material-ui/styles';
 
-
+import MenuIcon from 'material-ui-icons/Menu';
 
 class DeliveryHome extends Component{
  
-    
-    
-    
+   
     render() {
-        
-        var style = {
-         color: 'white',
-         float: 'right',
-        };
-        
+      
         return ( 
-            <div>
-                <AppBar> 
-                    <Toolbar>
-                        <Typography variant="title" color="inherit">
-                                Deliverer
-                            <Button color ="secondary" variant = "raised" style= {style}
-                        
+            <div> 
+                <div >
+                    <AppBar >
+                        <Toolbar>            
+                            <Typography align ="right" variant="title" color="inherit">    
+                                 <Button color ="secondary" variant = "raised" 
                                 component={Link} to="" onClick={()=>{firebase.auth().signOut()}}> Logout
-                            </Button>
-                        </Typography>
-                    </Toolbar>
-                    
-            </AppBar>
-            </div>
+                                 </Button>
+                            </Typography>
+                        </Toolbar>
+                    </AppBar>
+                </div>
+            
+                <div className="AddShop-title-bar" style={{marginTop:'100px'}}>
+                        <Typography variant="display2" align ="center">
+                            Your Overview
+                        </Typography>       
+                    <Divider />
+                </div>
+            
+        </div>
         );
     }
 };
