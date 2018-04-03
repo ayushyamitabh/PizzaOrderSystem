@@ -24,13 +24,25 @@ Reach us at tagmhaxt@gmail.com
 
 *Use G-Mail login for Firebase & Google Maps API*
 
+###### UNIVERSAL
+
 1. Firebase (Hosting, BaaS & Authentication) | [Documentation](https://firebase.google.com/docs) | [Login](https://console.firebase.google.com/)
+
+###### FOR WEB
+
 2. Material-UI (UI components) | [Documentation](https://material-ui-next.com/)
 3. ReactJS (JS Framework) | [Documentation](https://reactjs.org/)
 4. Google Maps Wrapper | [GitHub](https://github.com/Carrooi/Js-GoogleMapsLoader)
 5. Google Maps & Places API | [Documentation](https://developers.google.com/maps) | [Login](https://console.developers.google.com/apis) 
 6. AOS (Animation Provider) | [GitHub](https://github.com/michalsnik/aos)
 7. React Router | [Documentation](https://reacttraining.com/react-router/web/guides/basic-components)
+8. History | [GitHub](https://github.com/ReactTraining/history)
+
+###### FOR APP
+
+9. React Native | [Documentation](https://facebook.github.io/react-native/)
+10. React Native Material-UI | [GitHub](https://github.com/xotahal/react-native-material-ui)
+11. React Navigation | [Documentation](https://reactnavigation.org/)
 
 ----
 #### Getting Started:
