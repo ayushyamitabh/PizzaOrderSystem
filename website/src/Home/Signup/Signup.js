@@ -107,14 +107,12 @@ export default class Signup extends Component{
                                                 modifiedList[key] = shopList[key];
                                             }
                                         })
-                                        console.log('modified', modifiedList);
                                         this.setState({
                                             shopList: modifiedList,
                                             processing: false,
                                             step1complete: true
                                         })
                                     } else {
-                                        console.log('original', shopList);
                                         this.setState({
                                             shopList: shopList,
                                             processing: false,
@@ -249,7 +247,6 @@ export default class Signup extends Component{
             } else {
                 setData.shop = this.state.selectedShop;
             }
-            console.log(setData);
             firebase.database().ref(`Users/${firebase.auth().currentUser.uid}/`).set(setData).then(()=>{
                     this.setState({
                         processing: false,
@@ -510,7 +507,7 @@ export default class Signup extends Component{
                                 component={Link} to="/"
                                 fullWidth>
                                 <Done style={{marginRight:'10px'}}/>
-                                Go Get 🍕
+                                Done
                             </Button>:
                             null
                         }

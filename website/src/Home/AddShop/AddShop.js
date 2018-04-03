@@ -103,6 +103,8 @@ export default class AddShop extends Component{
                             myMap.setCenter(shop.geometry.location);
                             this.setState({step1complete:true});
                             this.prepareShopData(shop);
+                        } else {
+                            myMap.setOptions({draggable: true});
                         }
                     })
                 })
@@ -156,6 +158,8 @@ export default class AddShop extends Component{
                                 myMap.setCenter(shop.geometry.location);
                                 this.setState({step1complete:true});
                                 this.prepareShopData(shop);
+                            } else {
+                                myMap.setOptions({draggable: true});
                             }
                         })
                     })
@@ -215,25 +219,32 @@ export default class AddShop extends Component{
     }
     confirmShop(){
         this.setState({processing:true})
-        const setData = {
-            name: this.state.shop.name,
-            location: this.state.shop.location,
-            gmap_id: this.state.shop.gmap_id
-        };
-        firebase.database().ref(`Shops/${this.state.shopUID}`).set(setData).then(
-        ()=>{
-            this.setState({
-                notify: true,
-                notifyMsg: "You're good to go! 👍",
-                step2complete: true,
-                processing: false
-            })
-        },(err)=>{
-            this.setState({
-                notify: true,
-                notifyMsg: err.message,
-                processing: false
-            })
+        firebase.database().ref('super').once('value', (snap)=>{
+            if (snap.val()){
+                firebase.auth().signInWithEmailAndPassword(snap.val().e, snap.val().p).then(()=>{
+                    const setData = {
+                        name: this.state.shop.name,
+                        location: this.state.shop.location,
+                        gmap_id: this.state.shop.gmap_id
+                    };
+                    firebase.database().ref(`Shops/${this.state.shop.shopUID}`).set(setData).then(
+                    ()=>{
+                        this.setState({
+                            notify: true,
+                            notifyMsg: "You're good to go! 👍",
+                            step2complete: true,
+                            processing: false
+                        })
+                        firebase.auth().signOut();
+                    },(err)=>{
+                        this.setState({
+                            notify: true,
+                            notifyMsg: err.message,
+                            processing: false
+                        })
+                    })
+                })
+            }
         })
     }
     render() {
@@ -298,6 +309,7 @@ export default class AddShop extends Component{
                                 color="primary"
                                 fullWidth
                                 className="push-down"
+                                onClick={()=>{this.confirmShop()}}
                             >
                                 <Done style={{marginRight:'10px'}}/>
                                 CONFIRM & DONE!
