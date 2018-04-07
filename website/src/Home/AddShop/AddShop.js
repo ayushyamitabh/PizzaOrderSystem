@@ -10,6 +10,7 @@ import {Button,
         TextField,
         Typography} from 'material-ui';
 import * as firebase from 'firebase';
+import axios from 'axios';
 import * as GoogleMapsLoader from 'google-maps';
 import Done from 'material-ui-icons/CheckCircle';
 import Next from 'material-ui-icons/PlayCircleFilled';
@@ -218,7 +219,33 @@ export default class AddShop extends Component{
         })
     }
     confirmShop(){
-        this.setState({processing:true})
+        this.setState({processing:true});
+        const qData = {            
+            name: this.state.shop.name,
+            location: this.state.shop.location,
+            gmap_id: this.state.shop.gmap_id,
+            uid: this.state.shop.shopUID
+        };
+        axios.post('http://localhost:5000/pos-tagmhaxt/us-central1/addShop',qData)
+        .then((result)=>{
+            console.log(result.status, result.data);
+            if (result.status === 201) {
+                this.setState({
+                    notify: true,
+                    notifyMsg: "You're good to go! 👍",
+                    step2complete: true,
+                    processing: false
+                })
+            }
+        }).catch((error)=>{
+            this.setState({
+                notify: true,
+                notifyMsg: 'Oops...looks like something went wrong 😟',
+                processing: false
+            })
+            console.log(error);
+        })
+        /*
         firebase.database().ref('super').once('value', (snap)=>{
             if (snap.val()){
                 firebase.auth().signInWithEmailAndPassword(snap.val().e, snap.val().p).then(()=>{
@@ -245,7 +272,7 @@ export default class AddShop extends Component{
                     })
                 })
             }
-        })
+        })*/
     }
     render() {
         return(

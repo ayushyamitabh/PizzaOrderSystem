@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Router, Route, Switch } from 'react-router-dom';
 import createHistory from 'history/createBrowserHistory';
-import Deliverer from './Delivery/DeliveryRoutes.js';
+import DeliveryRoutes from './Delivery/DeliveryRoutes.js';
 import Home from './Home/Home.js';
 import Signup from './Home/Signup/Signup.js';
 import AddShop from './Home/AddShop/AddShop.js';
@@ -46,7 +46,7 @@ class App extends Component {
                 })
                 /*
                     User is logged in, check type and redirect here
-                    How to redirect -- this.props.history.push('/sign-up');
+                    How to redirect -- this.history.push('/sign-up');
 
                 */
                firebase.database().ref(`Users/${user.uid}/type`).once('value', 
@@ -91,7 +91,7 @@ class App extends Component {
                     <Route exact path="/" render={(props)=>{return <Home {...props} userType={this.state.userType} loggedIn={this.state.loggedIn} />;}} />
                     <Route path="/sign-up" component={Signup} />
                     <Route path="/add-shop" component={AddShop} />
-                    <Route path="/deliverer" component={Deliverer} />
+                    <Route path="/deliverer" component={DeliveryRoutes} />
                     <Route component={NotFound} />
                 </Switch>
                 </div>
