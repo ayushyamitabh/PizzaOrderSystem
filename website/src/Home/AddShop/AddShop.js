@@ -226,7 +226,7 @@ export default class AddShop extends Component{
             gmap_id: this.state.shop.gmap_id,
             uid: this.state.shop.shopUID
         };
-        axios.post('http://localhost:5000/pos-tagmhaxt/us-central1/addShop',qData)
+        axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/addShop',qData)
         .then((result)=>{
             console.log(result.status, result.data);
             if (result.status === 201) {
