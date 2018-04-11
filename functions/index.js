@@ -24,3 +24,21 @@ exports.addShop = functions.https.onRequest((req, res)=>{
         })
     });
 });
+
+exports.doesShopExist = functions.https.onRequest((req, res)=>{
+    return cors(req, res, ()=>{
+        admin.database().ref(`Shops/`).once('value').then((snapshot)=>{
+            var shops = snapshot.val();
+            if (shops) {
+                Object.keys(shops).forEach((key, index)=>{
+                    if (shops[key].gmap_id === req.body.gmap_id) {
+                        res.status(200).send({found: true});
+                    }
+                })
+                res.status(200).send({found: false});
+            }
+        }).catch((error)=>{
+            res.status(500).send("Couldn't get data from database");
+        })
+    })
+})

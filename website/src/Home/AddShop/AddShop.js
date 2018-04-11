@@ -9,7 +9,6 @@ import {Button,
         Snackbar,
         TextField,
         Typography} from 'material-ui';
-import * as firebase from 'firebase';
 import axios from 'axios';
 import * as GoogleMapsLoader from 'google-maps';
 import Done from 'material-ui-icons/CheckCircle';
@@ -21,7 +20,6 @@ export default class AddShop extends Component{
         super(props);
         this.state = {
             processing: true,
-            shopList: null,
             notify: false,
             notifyMsg: '',
             step1complete: false,
@@ -41,13 +39,6 @@ export default class AddShop extends Component{
         this.uuid = this.uuid.bind(this);
     }
     componentDidMount(){
-        firebase.database().ref('Shops/').once('value', (snap)=>{
-            if (snap.val()) {
-                this.setState({
-                    shopList: snap.val()
-                })
-            }
-        })
         GoogleMapsLoader.KEY = 'AIzaSyAyZVH3IJTKen6oYJ8WmUP_BazsTy_AgUg';
         GoogleMapsLoader.LIBRARIES = ['places'];
         GoogleMapsLoader.load((google)=>{
@@ -90,23 +81,25 @@ export default class AddShop extends Component{
                         tempMarker.setOpacity(1);
                         tempMarker.setZIndex(100);
                         myMap.setOptions({draggable: false});
-                        if (this.checkShop(shop) === false) {
-                            document.getElementById('map-container').style.height = '100px';
-                            placesMarkers.forEach((markHere)=>{
-                                markHere.setMap(null);
-                            })
-                            placesMarkers = [];
-                            new google.maps.Marker({
-                                position: shop.geometry.location,
-                                map: myMap
-                            });
-                            myMap.setZoom(17);
-                            myMap.setCenter(shop.geometry.location);
-                            this.setState({step1complete:true});
-                            this.prepareShopData(shop);
-                        } else {
-                            myMap.setOptions({draggable: true});
-                        }
+                        this.checkShop(shop).then((val)=>{
+                            if (val === false){
+                                document.getElementById('map-container').style.height = '100px';
+                                placesMarkers.forEach((markHere)=>{
+                                    markHere.setMap(null);
+                                })
+                                placesMarkers = [];
+                                new google.maps.Marker({
+                                    position: shop.geometry.location,
+                                    map: myMap
+                                });
+                                myMap.setZoom(17);
+                                myMap.setCenter(shop.geometry.location);
+                                this.setState({step1complete:true});
+                                this.prepareShopData(shop);
+                            } else {
+                                myMap.setOptions({draggable: true});
+                            }
+                        })
                     })
                 })
                 this.setState({
@@ -145,23 +138,25 @@ export default class AddShop extends Component{
                             tempMarker.setOpacity(1); 
                             tempMarker.setZIndex(100);
                             myMap.setOptions({draggable: false});
-                            if (this.checkShop(shop) === false) {
-                                document.getElementById('map-container').style.height = '100px';
-                                placesMarkers.forEach((markHere)=>{
-                                    markHere.setMap(null);
-                                })
-                                placesMarkers = [];
-                                new google.maps.Marker({
-                                    position: shop.geometry.location,
-                                    map: myMap
-                                });
-                                myMap.setZoom(17);
-                                myMap.setCenter(shop.geometry.location);
-                                this.setState({step1complete:true});
-                                this.prepareShopData(shop);
-                            } else {
-                                myMap.setOptions({draggable: true});
-                            }
+                            this.checkShop(shop).then((val)=>{
+                                if (val === false){
+                                    document.getElementById('map-container').style.height = '100px';
+                                    placesMarkers.forEach((markHere)=>{
+                                        markHere.setMap(null);
+                                    })
+                                    placesMarkers = [];
+                                    new google.maps.Marker({
+                                        position: shop.geometry.location,
+                                        map: myMap
+                                    });
+                                    myMap.setZoom(17);
+                                    myMap.setCenter(shop.geometry.location);
+                                    this.setState({step1complete:true});
+                                    this.prepareShopData(shop);
+                                } else {
+                                    myMap.setOptions({draggable: true});
+                                }
+                            })
                         })
                     })
                     this.setState({
@@ -174,24 +169,33 @@ export default class AddShop extends Component{
     }
     checkShop(shop){
         this.setState({processing: true});
-        var found = false;
-        Object.keys(this.state.shopList).forEach( (key, index)=>{
-            if (this.state.shopList[key].gmap_id === shop.id) {
+        const qData = {
+            gmap_id: shop.id
+        };
+        return axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/doesShopExist',qData)
+        .then((result)=>{
+            if (result.data.found === true) {
                 this.setState({
                     notify: true,
-                    notifyMsg: "Looks like that shop is already registered"
+                    notifyMsg: "Looks like that shop is already registered",
+                    processing: false
                 })
-                found = true;
+            } else {
+                this.setState({
+                    notify: true,
+                    notifyMsg: "Great to have you on-board. This shouldn't take too long 😊.",
+                    processing: false
+                })
             }
-        })
-        if (!found){
+            return result.data.found;
+        }).catch((error)=>{
             this.setState({
                 notify: true,
-                notifyMsg: "Great to have you on-board. This shouldn't take too long 😊."
+                notifyMsg: "Something went wrong 😟. Try again.",
+                processing: false
             })
-        }
-        this.setState({processing: false});
-        return found;
+            return true;
+        })
     }
     uuid() {
         var uuid = "", i, random;
@@ -228,7 +232,6 @@ export default class AddShop extends Component{
         };
         axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/addShop',qData)
         .then((result)=>{
-            console.log(result.status, result.data);
             if (result.status === 201) {
                 this.setState({
                     notify: true,
