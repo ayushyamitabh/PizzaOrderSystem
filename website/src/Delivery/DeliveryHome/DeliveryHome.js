@@ -25,7 +25,7 @@ class DeliveryHome extends Component{
   constructor(props) {
         super(props);
         this.state = {
-            
+            name: '',
         };
   }
    
@@ -47,18 +47,18 @@ class DeliveryHome extends Component{
         
         
         return ( 
-            <div> 
-                <div >
-                    <AppBar >
-                        <Toolbar>            
-                            <Typography align ="right" variant="title" color="inherit">    
-                                 <Button color ="secondary" variant = "raised" 
+            <div><Button color ="secondary" variant = "raised" 
                                 component={Link} to="" onClick={()=>{firebase.auth().signOut()}}> Logout
                                  </Button>
-                            </Typography>
-                        </Toolbar>
-                    </AppBar>
-                </div>
+            <div className="signup-page"> 
+               <div className="delivererSection">
+                 <Typography variant="display2">
+                       Weirdoughs | Welcome Deliverer 
+                    </Typography>
+                    
+            </div>
+</div>
+          <Divider />
             
                 <div className ="color1" style={{marginTop:'100px'}}>
                         <Typography variant="display2" align="center" color ="inherit">

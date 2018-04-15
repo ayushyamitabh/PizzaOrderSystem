@@ -1,3 +1,15 @@
 .card {
     max-width: 345;
 }
+
+.delivererSection{
+    display: flex;
+    flex-direction: column;
+    margin: 0 auto;
+    justify-content:center;
+}
+
+.signup-page{
+    padding: 5% 20%;
+    padding-bottom: 0 !important;
+}
