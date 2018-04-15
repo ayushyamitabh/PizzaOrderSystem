@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Router, Route, Switch } from 'react-router-dom';
 import createHistory from 'history/createBrowserHistory';
 import DeliveryRoutes from './Delivery/DeliveryRoutes.js';
+import CustomerRoutes from './Customer/CustomerRoutes.js';
 import Home from './Home/Home.js';
 import Signup from './Home/Signup/Signup.js';
 import AddShop from './Home/AddShop/AddShop.js';
@@ -92,6 +93,7 @@ class App extends Component {
                     <Route path="/sign-up" component={Signup} />
                     <Route path="/add-shop" component={AddShop} />
                     <Route path="/deliverer" component={DeliveryRoutes} />
+                    <Route path="/customer" component={CustomerRoutes} />
                     <Route component={NotFound} />
                 </Switch>
                 </div>

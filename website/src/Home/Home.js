@@ -214,6 +214,10 @@ class Home extends Component {
                     <Card className="login-form" style={{padding:'20px'}} data-aos="slide-left" >
                         <CardHeader title="About Us" />
                         <CardContent>
+                            <Typography variant="subheading">
+                                We've been making pizza for the last century. From Rome, Italy - we've perfected the pizza formula.
+                                We don't cut corners, we cut slices. We don't compromise in quality but we let our prices slack.
+                            </Typography>
                             <List>
                                 <ListItem button component='a' href="https://github.com/ayushyamitabh/PizzaOrderSystem">
                                     <Avatar>
