@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Router, Route, Switch } from 'react-router-dom';
 import createHistory from 'history/createBrowserHistory';
 import DeliveryRoutes from './Delivery/DeliveryRoutes.js';
+import CookRoutes from './Cook/CookRoutes.js';
 import Home from './Home/Home.js';
 import Signup from './Home/Signup/Signup.js';
 import AddShop from './Home/AddShop/AddShop.js';
@@ -49,17 +50,17 @@ class App extends Component {
                     How to redirect -- this.history.push('/sign-up');
 
                 */
-               firebase.database().ref(`Users/${user.uid}/type`).once('value', 
+               firebase.database().ref(`Users/${user.uid}/type`).once('value',
                     (snap)=>{
                         if (snap.val()) {
                             const userType = snap.val();
                             if (userType === 'customer') {
                                 this.history.push(`/customer/home`);
-                            } else if (userType === 'cook'){                                
+                            } else if (userType === 'cook'){
                                 this.history.push(`/cook/home`);
-                            } else if (userType === 'deliverer'){                                
+                            } else if (userType === 'deliverer'){
                                 this.history.push(`/deliverer/home`);
-                            } else if (userType === 'manager'){                                
+                            } else if (userType === 'manager'){
                                 this.history.push(`/manager/home`);
                             } else if (userType === 'super') {
 
@@ -92,6 +93,7 @@ class App extends Component {
                     <Route path="/sign-up" component={Signup} />
                     <Route path="/add-shop" component={AddShop} />
                     <Route path="/deliverer" component={DeliveryRoutes} />
+                    <Route path="/cook" component={CookRoutes} />
                     <Route component={NotFound} />
                 </Switch>
                 </div>
