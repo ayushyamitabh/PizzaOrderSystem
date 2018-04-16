@@ -13,3 +13,11 @@
     padding: 5% 20%;
     padding-bottom: 0 !important;
 }
+
+
+.column{
+    display: grid;
+    grid-row: auto;
+    grid-gap: 10px;
+    padding: 10px;
+}

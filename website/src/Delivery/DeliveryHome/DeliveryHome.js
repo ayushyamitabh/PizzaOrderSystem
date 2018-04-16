@@ -25,25 +25,30 @@ class DeliveryHome extends Component{
   constructor(props) {
         super(props);
         this.state = {
-            name: '',
+            cook: {
+                delivererID: '',
+                name: '',
+                shopID: '',
+                orderID: '',
+                averageRating: '',
+                warning: '',
+                warned: false,
+            }
         };
   }
+    componentDidMount(){
+       /* var delivererRef =
+       */
+    }
    
     render() {
-        const centerCard = {
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-
-};
+        
         const cardDescription = {
         maxWidth: 345,
-        border: '5px solid pink',
-        marginTop:'100px',
+        border: '5px solid pink',     
         
-
 };
-        
+      
         
         
         return ( 
@@ -60,14 +65,14 @@ class DeliveryHome extends Component{
 </div>
           <Divider />
             
-                <div className ="color1" style={{marginTop:'100px'}}>
+                <div  style={{marginTop:'100px'}}>
                         <Typography variant="display2" align="center" color ="inherit">
                             Your Overview
                         </Typography>       
                     <Divider />
                 </div>
     
-                <div style ={centerCard} data-aos ="flip-up"> 
+                <div className="column" data-aos ="flip-up"> 
                     <Card  data-aos ="flip-up" style ={cardDescription} >
                 <CardHeader
                     title="Pizza Review"
@@ -85,9 +90,7 @@ class DeliveryHome extends Component{
                 </CardContent>
                 </Card>
 
-            </div>
-            <div style ={centerCard} data-aos ="flip-up">
-                    <Card style={cardDescription} >
+              <Card  data-aos ="flip-up" style ={cardDescription} >
                 <CardHeader
                     title="Pizza Review"
                 />
@@ -104,12 +107,9 @@ class DeliveryHome extends Component{
                 </CardContent>
                 </Card>
 
-            </div>
-            <div style ={centerCard} data-aos ="flip-up">
-                    <Card style={cardDescription} >
+                <Card  data-aos ="flip-up" style ={cardDescription} >
                 <CardHeader
                     title="Pizza Review"
-                   
                 />
     
                 <CardContent>
@@ -124,8 +124,10 @@ class DeliveryHome extends Component{
                 </CardContent>
                 </Card>
 
+                
             </div>
         </div>
+
         );
     }
 };
