@@ -33,9 +33,28 @@ class DeliveryHome extends Component{
                 averageRating: '',
                 warning: '',
                 warned: false,
+                comment:'',
+                
             }
+        
         };
+        this.handleChange = this.handleChange.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
   }
+    handleChange(e) {
+    this.setState({
+      [e.target.name]: e.target.value
+    });
+  }
+    
+     handleSubmit(e) {
+     e.preventDefault();
+     console.log(this.state.cook.comment.value);
+  }
+    
+    
+   
+    
     componentDidMount(){
        /* var delivererRef =
        */
@@ -72,57 +91,30 @@ class DeliveryHome extends Component{
                     <Divider />
                 </div>
     
+
+
+
                 <div className="column" data-aos ="flip-up"> 
                     <Card  data-aos ="flip-up" style ={cardDescription} >
-                <CardHeader
-                    title="Pizza Review"
-                />
-    
+                
                 <CardContent>
                     <Typography gutterBottom variant="headline" component="h2">
-                    Lizard
+                    Rater Name 
                     </Typography>
 
                 <Typography component="p">
-                Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging
-                across all continents except Antarctica
+                <section>
+                    <form>
+                        <input type="text" name="username" placeholder="What's your name?" onChange={this.handleChange} value = {this.state.cook.comment}/>
+                        
+                    </form>
+                </section>
                 </Typography>
+                <Button style={{marginTop:'10px'}}variant ="raised" color ="secondary">Add Item</Button>
                 </CardContent>
                 </Card>
 
-              <Card  data-aos ="flip-up" style ={cardDescription} >
-                <CardHeader
-                    title="Pizza Review"
-                />
-    
-                <CardContent>
-                    <Typography gutterBottom variant="headline" component="h2">
-                    Lizard
-                    </Typography>
-
-                <Typography component="p">
-                Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging
-                across all continents except Antarctica
-                </Typography>
-                </CardContent>
-                </Card>
-
-                <Card  data-aos ="flip-up" style ={cardDescription} >
-                <CardHeader
-                    title="Pizza Review"
-                />
-    
-                <CardContent>
-                    <Typography gutterBottom variant="headline" component="h2">
-                    Lizard
-                    </Typography>
-
-                <Typography component="p">
-                Lizards are a widespread group of squamate reptiles, with over 6,000 species, ranging
-                across all continents except Antarctica
-                </Typography>
-                </CardContent>
-                </Card>
+             
 
                 
             </div>
