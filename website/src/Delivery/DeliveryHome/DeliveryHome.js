@@ -25,50 +25,42 @@ class DeliveryHome extends Component{
   constructor(props) {
         super(props);
         this.state = {
-            cook: {
+            cook:{
                 delivererID: '',
                 name: '',
                 shopID: '',
                 orderID: '',
-                averageRating: '',
+                averageRating:'',
                 warning: '',
-                warned: false,
-                comment:'',
-                
+                comment:'',  
+                warned: false
             }
-        
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
   }
     handleChange(e) {
     this.setState({
-      [e.target.name]: e.target.value
-    });
-  }
+    [e.target.name]: e.target.value
+  });
+}
     
      handleSubmit(e) {
      e.preventDefault();
-     console.log(this.state.cook.comment.value);
+     console.log('Submitted');
   }
     
     
-   
-    
     componentDidMount(){
-       /* var delivererRef =
-       */
+       
     }
    
     render() {
         
         const cardDescription = {
         maxWidth: 345,
-        border: '5px solid pink',     
-        
+        border: '5px solid pink',      
 };
-      
-        
         
         return ( 
             <div><Button color ="secondary" variant = "raised" 
@@ -102,15 +94,16 @@ class DeliveryHome extends Component{
                     Rater Name 
                     </Typography>
 
-                <Typography component="p">
+               
                 <section>
-                    <form>
-                        <input type="text" name="username" placeholder="What's your name?" onChange={this.handleChange} value = {this.state.cook.comment}/>
-                        
+                    <form onSubmit={this.handleSubmit}>
+                        <input name="comment" value = {this.state.comment} onChange={this.handleChange} />
+                            
+                        <Button style={{marginLeft:'10px'}}variant ="raised" color ="secondary" >Add Item</Button>
                     </form>
                 </section>
-                </Typography>
-                <Button style={{marginTop:'10px'}}variant ="raised" color ="secondary">Add Item</Button>
+                
+                
                 </CardContent>
                 </Card>
 
