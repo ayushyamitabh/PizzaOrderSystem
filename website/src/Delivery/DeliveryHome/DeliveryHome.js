@@ -31,86 +31,80 @@ class DeliveryHome extends Component{
                 shopID: '',
                 orderID: '',
                 averageRating:'',
+                rating:'',
                 warning: '',
                 comment:'',  
                 warned: false
-            }
+            },
+            
         };
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
   }
+    
     handleChange(e) {
-    this.setState({
-    [e.target.name]: e.target.value
-  });
-}
+        this.setState({
+        [e.target.name]: e.target.value
+      });
+    }
     
      handleSubmit(e) {
-     e.preventDefault();
-     console.log('Submitted');
+      e.preventDefault();
+      const itemsRef = firebase.database().ref('TestByMelvin');
+      const item = {
+      comment: this.state.comment
   }
-    
-    
+      itemsRef.push(item);
+      this.setState({
+      comment:''
+  });
+   
+     
+  }
     componentDidMount(){
        
     }
    
     render() {
-        
         const cardDescription = {
         maxWidth: 345,
-        border: '5px solid pink',      
+        border: '5px solid black',      
 };
         
         return ( 
             <div><Button color ="secondary" variant = "raised" 
                                 component={Link} to="" onClick={()=>{firebase.auth().signOut()}}> Logout
                                  </Button>
-            <div className="signup-page"> 
-               <div className="delivererSection">
-                 <Typography variant="display2">
-                       Weirdoughs | Welcome Deliverer 
-                    </Typography>
+                <div className="signup-page"> 
+                    <div className="delivererSection">
+                        <Typography variant="display2">
+                            Weirdoughs | Welcome Deliverer 
+                        </Typography>
                     
-            </div>
-</div>
+                    </div>
+                </div>
+
           <Divider />
             
-                <div  style={{marginTop:'100px'}}>
+                <div style={{marginTop:'25px'}}>
                         <Typography variant="display2" align="center" color ="inherit">
                             Your Overview
-                        </Typography>       
-                    <Divider />
+                        </Typography>         
                 </div>
     
-
-
-
                 <div className="column" data-aos ="flip-up"> 
                     <Card  data-aos ="flip-up" style ={cardDescription} >
-                
-                <CardContent>
-                    <Typography gutterBottom variant="headline" component="h2">
-                    Rater Name 
-                    </Typography>
-
-               
-                <section>
-                    <form onSubmit={this.handleSubmit}>
-                        <input name="comment" value = {this.state.comment} onChange={this.handleChange} />
-                            
-                        <Button style={{marginLeft:'10px'}}variant ="raised" color ="secondary" >Add Item</Button>
-                    </form>
-                </section>
-                
-                
-                </CardContent>
-                </Card>
-
-             
-
-                
-            </div>
+                        <CardContent>
+                            <Typography gutterBottom variant="headline" component= "h2">
+                                Rater Name 
+                            </Typography>
+                                <form onSubmit={this.handleSubmit}>
+                                    <input name="comment" value = {this.state.comment} onChange={this.handleChange} placeholder ="Write A Comment" />
+                                        <button  style={{marginLeft:'10px'}}variant ="raised" color ="secondary" >Add Item</button>
+                                </form>
+                        </CardContent>
+                    </Card>  
+                </div>
         </div>
 
         );
