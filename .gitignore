@@ -21,3 +21,6 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 functions/ptfa.json
+*.log
+*.log
+functions/cloud-functions-emulator.log

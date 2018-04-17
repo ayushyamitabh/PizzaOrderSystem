@@ -42,3 +42,20 @@ exports.doesShopExist = functions.https.onRequest((req, res)=>{
         })
     })
 })
+
+exports.getUserOrderData = functions.https.onRequest((req, res)=>{
+    return cors(req, res, ()=>{
+        var oData = [];
+        req.body.orders.forEach((data)=>{
+            admin.database().ref(`Orders/${data}`).once('value').then((snapshot)=>{
+                var order = snapshot.val();
+                if (order) {
+                    oData.push(order);
+                }
+                if (oData.length === req.body.orders.length) {
+                    res.status(200).send({orderData: oData});
+                }
+            })
+        })
+    })
+})
