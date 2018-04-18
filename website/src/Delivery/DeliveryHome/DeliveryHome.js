@@ -85,7 +85,8 @@ class DeliveryHome extends Component{
       comment:''
   });
  
- */  
+*/
+         
   }
    
     componentDidMount(){
@@ -100,7 +101,7 @@ class DeliveryHome extends Component{
     authListener(){
         this.fireBaseListener = firebase.auth().onAuthStateChanged((user) =>{
            if(user){
-               firebase.database().ref('Users/$(user.uid)/').once('value',
+            firebase.database().ref('Users/$(user.uid)/').once('value',
                     (snap) => {
                         this.setState({
                             user: {
@@ -163,35 +164,36 @@ class DeliveryHome extends Component{
 };
         
         return ( 
-            <div><Button color ="secondary" variant = "raised" 
-                                component={Link} to="" onClick={()=>{firebase.auth().signOut()}}> Logout
-                                 </Button>
+            <div>
                 <div className="signup-page"> 
                     <div className="delivererSection">
                         <Typography variant="display2">
-                            Weirdoughs | Welcome Deliverer 
+                            Welcome, {this.state.user.displayName}
+                            
                         </Typography>
-                    
+            
+                    <Divider />
                     </div>
                 </div>
 
-          <Divider />
+          
             
                 <div style={{marginTop:'25px'}}>
-                        <Typography  variant="display2" align="center" color ="inherit">
-                            Your Overview
-                        </Typography>         
+                        <Typography  variant="display2" color ="inherit">
+                            Your Ratings will be displayed here. 
+                        </Typography>     
+                    
                 </div>
-    
+            <Divider />
                 <div className="column" data-aos ="flip-up"> 
                     <Card  data-aos ="flip-up" style ={cardDescription} >
                         <CardContent>
                             <Typography gutterBottom variant="headline" component= "h2">
-                                Rater Name 
+                                Rater Name
                             </Typography>
                                 <form onSubmit={this.handleSubmit}>
                                     <input name="comment" value = {this.state.comment} onChange={this.handleChange} placeholder ="Write A Comment" />
-                                        <Button type ="submit" style={{marginLeft:'10px'}}variant ="raised" color ="secondary" >Add Item</Button>
+                                        <Button type ="submit" style={{marginLeft:'10px'}}variant ="raised" color ="secondary" >Add Rating</Button>
                                 </form>
                         </CardContent>
                     </Card>  
