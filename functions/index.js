@@ -59,3 +59,32 @@ exports.getUserOrderData = functions.https.onRequest((req, res)=>{
         })
     })
 })
+
+exports.getClosestShops = functions.https.onRequest((req, res)=>{
+    return cors(req, res, ()=>{
+        var places = req.body;
+        admin.database().ref(`Shops/`).once('value').then((snapshot)=>{
+            var shops = snapshot.val();
+            if(shops){
+                var gmapIDs = [];
+                var result = [];
+                Object.keys(shops).forEach((shop)=>{
+                    gmapIDs.push(shops[shop].gmap_id);
+                })
+                places.forEach((place)=>{
+                    var ind = gmapIDs.indexOf(place.id);
+                    if(ind>=0){
+                        result.push(shops[Object.keys(shops)[ind]]);
+                    }
+                })
+                res.status(200).send({shops:result});
+            }
+        })
+    })
+})
+
+exports.getPizzas = functions.https.onRequest((req, res)=>{
+    return cors(req, res, ()=>{
+        //expects only shop id to return pizza data.
+    })
+})

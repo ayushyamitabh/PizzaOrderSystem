@@ -13,11 +13,13 @@ import {Avatar,
         IconButton,
         LinearProgress,
         MenuItem,
+        Snackbar,
         TextField,
         Typography} from 'material-ui';
 import * as firebase from 'firebase';
 import * as GoogleMapsLoader from 'google-maps';
 import Close from 'material-ui-icons/Close';
+import Logout from 'material-ui-icons/ExitToApp';
 import './CustomerHome.css';
 import axios from 'axios';
 
@@ -38,16 +40,99 @@ export default class CustomerHome extends Component{
             },
             showDetails: false,
             selectedIndex: null,
-            processing: false
+            processing: false,
+            notify: false,
+            notifyMessage: '',
+            step1complete: false,
+            selectedShop: null,
+            step2complete: false
         }
         this.fireBaseListener = null;
         this.authListener = this.authListener.bind(this);
         this.showDetails = this.showDetails.bind(this);
         this.hideDetails = this.hideDetails.bind(this);
         this.updateDeliverer = this.updateDeliverer.bind(this);
+        this.notify = this.notify.bind(this);
+        this.loadMap = this.loadMap.bind(this);
     }
     componentDidMount() {
         this.authListener();
+    }
+    notify(message){
+        this.setState({
+            notify: true,
+            notifyMessage: message
+        })
+    }
+    loadMap(location){
+        this.setState({
+            processing: true
+        })
+        GoogleMapsLoader.KEY = 'AIzaSyAyZVH3IJTKen6oYJ8WmUP_BazsTy_AgUg';
+        GoogleMapsLoader.LIBRARIES = ['places'];
+        GoogleMapsLoader.load((google)=>{
+            var centerLocation = new google.maps.LatLng(location.x, location.y);
+            var customerMap = new google.maps.Map(document.getElementById('map'),{
+                center: centerLocation,
+                zoom: 15,
+                draggable: false,
+                zoomControl: false,
+                streetViewControl: false,
+                mapTypeControl: false,
+                fullscreenControl: false,
+                mapTypeId:'roadmap'
+            });
+            var searchReq = {
+                location: centerLocation,
+                radius: '250',
+                query: 'pizza'
+            };
+            var restraunts = [];
+            var placesService = new google.maps.places.PlacesService(customerMap);
+            placesService.textSearch(searchReq, (results)=>{
+                axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/getClosestShops',results)
+                .then((closeShops)=>{
+                    var shops = closeShops.data.shops;
+                    shops.forEach((data, index)=>{
+                        var tempMarker = new google.maps.Marker({
+                            position: new google.maps.LatLng(data.location.x,data.location.y),
+                            map: customerMap,
+                            opacity: 0.5
+                        });
+                        tempMarker.setLabel(data.name);
+                        tempMarker.addListener('click', ()=>{
+                            tempMarker.setOpacity(1);
+                            restraunts.forEach((r,i)=>{
+                                r.setMap(null);
+                            })
+                            restraunts = [];
+                            tempMarker.setMap(customerMap);
+                            this.setState({
+                                notify: true,
+                                notifyMessage: `Let's get your order from ${data.name} started! 😊`,
+                                step1complete: true,
+                                selectedShop: data
+                            });
+                            document.getElementById('map').style.height = '100px';
+                            customerMap.setCenter(new google.maps.LatLng(data.location.x, data.location.y));
+                        })
+                        restraunts.push(tempMarker);
+                    })
+                    this.setState({
+                        processing: false
+                    })
+                }).catch((error)=>{
+                    this.setState({
+                        notify: true,
+                        notifyMessage: "Couldn't get closest shops 😟."
+                    })
+                })
+            })
+            var positionMarker = new google.maps.Marker({
+                position: centerLocation,
+                map: customerMap
+            });
+        })
     }
     authListener() {
         this.fireBaseListener = firebase.auth().onAuthStateChanged((user)=>{
@@ -62,52 +147,28 @@ export default class CustomerHome extends Component{
                             },
                             userData : {
                                 variant: snap.val().type,
-                                orderList: snap.val().orders,
-                                location: snap.val().location
+                                orderList: snap.val().orders
                             }
                         })
-                        GoogleMapsLoader.KEY = 'AIzaSyAyZVH3IJTKen6oYJ8WmUP_BazsTy_AgUg';
-                        GoogleMapsLoader.LIBRARIES = ['places'];
-                        GoogleMapsLoader.load((google)=>{
-                            var centerLocation = null;
-                            var positionMarker;
-                            if (this.state.userData.location){
-                                centerLocation = new google.maps.LatLng(this.state.userData.location.x, this.state.userData.location.y);
-                            } else {
-                                navigator.geolocation.getCurrentPosition((position)=>{
-                                    centerLocation = new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
-                                    firebase.database().ref(`Users/${firebase.auth().currentUser.uid}/location`).set({x:position.coords.latitude, y:position.coords.longitude});
-                                },(error)=>{
-                                    console.log(error);
+                        if (snap.val().location){
+                            var location = {x:snap.val().location.x,y: snap.val().location.y};
+                            this.loadMap(location);
+                        } else {
+                            navigator.geolocation.getCurrentPosition((position)=>{
+                                var location = {x:position.coords.latitude,y: position.coords.longitude};
+                                firebase.database().ref(`Users/${firebase.auth().currentUser.uid}/location`).set({x:position.coords.latitude, y:position.coords.longitude}).then(()=>{
+                                    this.notify("Updated your saved location for next time 😊");
+                                    this.loadMap(location);
                                 })
-                            }
-                            var customerMap = new google.maps.Map(document.getElementById('map'),{
-                                center: centerLocation? centerLocation: {lat: 40.8188696, lng: -73.9461309},
-                                zoom: 15,
-                                draggable: centerLocation? false: true,
-                                zoomControl: false,
-                                streetViewControl: false,
-                                mapTypeControl: false,
-                                fullscreenControl: false,
-                                mapTypeId:'roadmap'
-                            });
-                            if (centerLocation) {
-                                positionMarker = new google.maps.Marker({
-                                    position: centerLocation,
-                                    map: customerMap
-                                })
-                            } else {
-                                customerMap.addListener('click',(data)=>{
-                                    if(positionMarker){
-                                        positionMarker.setMap(null);
-                                    }
-                                    positionMarker = new google.maps.Marker({
-                                        position: data.latLng,
-                                        map: customerMap
-                                    })
-                                })
-                            }
-                        })
+                            },(error)=>{
+                                var location = {x:40.8188696,y: -73.9461309};
+                                if (error.code === 1) {
+                                    this.notify("🤚 Couldn't get your location - we need your location to deliver 🍕.");
+                                    setTimeout(()=>{this.notify("Change your location permissions and reload.🔄")},2000);
+                                }
+                                this.loadMap(location);
+                            })
+                        }
                         if (snap.val()){
                             axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/getUserOrderData',{orders: snap.val().orders})
                             .then((result)=>{
@@ -209,6 +270,16 @@ export default class CustomerHome extends Component{
     render() {
         return(
             <div style={{padding:'50px 100px'}}>
+                {
+                    this.state.processing?
+                    <LinearProgress style={{marginBottom: '10px'}}/> : null
+                }
+                <Snackbar 
+                    onClose={()=>{this.setState({notify:false, notifyMessage: ''})}}
+                    open={this.state.notify}
+                    message={this.state.notifyMessage}
+                    autoHideDuration={2000}
+                />
                 <Dialog 
                     onClose={()=>{this.hideDetails(false)}} 
                     open={this.state.showDetails} 
@@ -216,12 +287,12 @@ export default class CustomerHome extends Component{
                     disableEscapeKeyDown={true}
                 >
                 {
-                    this.state.processing?
-                    <LinearProgress />:null
-                }
-                {
                     this.state.showDetails ?
-                    <div>
+                    <div>                        
+                    {
+                        this.state.processing?
+                        <LinearProgress />:null
+                    }
                         <DialogTitle
                             children={
                                 <span>
@@ -328,9 +399,10 @@ export default class CustomerHome extends Component{
                             src={this.state.user.profilePicture}
                             className="user-avatar"
                         />
-                        <Typography variant="display2" >
+                        <Typography variant="display2" style={{flex:1}}>
                             Welcome, {this.state.user.displayName}
                         </Typography>
+                        <Button onClick={()=>{firebase.auth().signOut();}} size="small"><Logout />signout</Button>
                     </div>:
                     null
                 }
@@ -388,7 +460,34 @@ export default class CustomerHome extends Component{
                         <Typography variant="display1" className="push-down" data-aos="fade-up">
                             Feeling Hungry?
                         </Typography>
+                        <Typography variant="subheading" className="push-down">
+                            Get started by choosing a shop.
+                        </Typography>
                         <div id="map" className="push-down" data-aos="fade-up"></div>
+                        {
+                            this.state.step1complete === true?
+                            <Card data-aos="fade-up">
+                                <CardHeader 
+                                    title={this.state.selectedShop.name}
+                                />
+                                <CardContent>
+                                    <Typography variant="title">
+                                        Menu
+                                    </Typography>
+                                    <Divider className="push-down"/>
+                                    {
+                                        this.state.selectedShop.pizzas?
+                                        <div>
+                                            Pizzas appear here
+                                        </div>:
+                                        <Typography variant="subheading" style={{textAlign:'center'}} className="push-down">
+                                            <i>This shop doesn't have any available pizzas right now.</i>
+                                        </Typography>
+                                    }
+                                </CardContent>
+                            </Card>:
+                            null
+                        }
                     </div>:
                     null
                 }
