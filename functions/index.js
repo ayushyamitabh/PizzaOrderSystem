@@ -55,6 +55,8 @@ exports.getUserOrderData = functions.https.onRequest((req, res)=>{
                 if (oData.length === req.body.orders.length) {
                     res.status(200).send({orderData: oData});
                 }
+            }).catch((error)=>{
+                res.status(500).send("Couldn't get data from database");
             })
         })
     })
@@ -74,17 +76,33 @@ exports.getClosestShops = functions.https.onRequest((req, res)=>{
                 places.forEach((place)=>{
                     var ind = gmapIDs.indexOf(place.id);
                     if(ind>=0){
+                        shops[Object.keys(shops)[ind]].address = place.formatted_address;
                         result.push(shops[Object.keys(shops)[ind]]);
                     }
                 })
                 res.status(200).send({shops:result});
             }
+        }).catch((error)=>{
+            res.status(500).send("Couldn't get data from database");
         })
     })
 })
 
 exports.getPizzas = functions.https.onRequest((req, res)=>{
     return cors(req, res, ()=>{
-        //expects only shop id to return pizza data.
+        var idList = req.body.pizzas;
+        var dataList = [];
+        idList.forEach((id)=>{
+            admin.database().ref(`Pizzas/${id}`).once('value').then((snapshot)=>{
+                var pizzaData = snapshot.val();
+                pizzaData.id = id;
+                dataList.push(pizzaData);
+                if (dataList.length === idList.length){
+                    res.status(200).send(dataList);
+                }
+            }).catch((error)=>{
+                res.status(500).send("Couldn't get data from database");
+            })
+        })
     })
 })

@@ -5,6 +5,7 @@ import {Avatar,
         CardActions,
         CardContent,
         CardHeader,
+        CardMedia,
         Dialog,
         DialogTitle,
         DialogContent,
@@ -20,6 +21,8 @@ import * as firebase from 'firebase';
 import * as GoogleMapsLoader from 'google-maps';
 import Close from 'material-ui-icons/Close';
 import Logout from 'material-ui-icons/ExitToApp';
+import RemoveCart from 'material-ui-icons/RemoveCircle';
+import User from 'material-ui-icons/Face';
 import './CustomerHome.css';
 import axios from 'axios';
 
@@ -35,7 +38,6 @@ export default class CustomerHome extends Component{
             userData: {
                 orderList: null,
                 orders: null,
-                ordersLoading: true,
                 ordersMesage: 'Getting your orders...'
             },
             showDetails: false,
@@ -82,6 +84,10 @@ export default class CustomerHome extends Component{
                 fullscreenControl: false,
                 mapTypeId:'roadmap'
             });
+            var positionMarker = new google.maps.Marker({
+                position: centerLocation,
+                map: customerMap
+            });
             var searchReq = {
                 location: centerLocation,
                 radius: '250',
@@ -101,20 +107,39 @@ export default class CustomerHome extends Component{
                         });
                         tempMarker.setLabel(data.name);
                         tempMarker.addListener('click', ()=>{
-                            tempMarker.setOpacity(1);
-                            restraunts.forEach((r,i)=>{
-                                r.setMap(null);
-                            })
-                            restraunts = [];
-                            tempMarker.setMap(customerMap);
-                            this.setState({
-                                notify: true,
-                                notifyMessage: `Let's get your order from ${data.name} started! 😊`,
-                                step1complete: true,
-                                selectedShop: data
-                            });
-                            document.getElementById('map').style.height = '100px';
-                            customerMap.setCenter(new google.maps.LatLng(data.location.x, data.location.y));
+                            this.setState({processing: true})
+                            if (data.pizzas){
+                                axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/getPizzas',{pizzas: data.pizzas})
+                                .then((pizzaData)=>{
+                                    data.pizzas = pizzaData.data;                                    
+                                    tempMarker.setOpacity(1);
+                                    restraunts.forEach((r,i)=>{
+                                        r.setMap(null);
+                                    })
+                                    restraunts = [];
+                                    tempMarker.setMap(customerMap);
+                                    tempMarker.setZIndex(100);
+                                    positionMarker.setMap(null);
+                                    customerMap.setCenter(new google.maps.LatLng(data.location.x, data.location.y));
+                                    document.getElementById('map').style.height = '100px';
+                                    this.setState({
+                                        processing: false,
+                                        step1complete: true,
+                                        selectedShop: data
+                                    });
+                                    this.notify(`Let's get your order from ${data.name} started! 😊`);
+                                }).catch((error)=>{
+                                    this.setState({
+                                        processing: false
+                                    })
+                                    this.notify("Couldn't get the shop's details. 😟");
+                                })
+                            } else {
+                                this.setState({
+                                    processing:false
+                                })
+                                this.notify("This shop doesn't have any 🍕's yet.");
+                            }
                         })
                         restraunts.push(tempMarker);
                     })
@@ -128,10 +153,6 @@ export default class CustomerHome extends Component{
                     })
                 })
             })
-            var positionMarker = new google.maps.Marker({
-                position: centerLocation,
-                map: customerMap
-            });
         })
     }
     authListener() {
@@ -272,7 +293,7 @@ export default class CustomerHome extends Component{
             <div style={{padding:'50px 100px'}}>
                 {
                     this.state.processing?
-                    <LinearProgress style={{marginBottom: '10px'}}/> : null
+                    <LinearProgress /> : null
                 }
                 <Snackbar 
                     onClose={()=>{this.setState({notify:false, notifyMessage: ''})}}
@@ -402,7 +423,8 @@ export default class CustomerHome extends Component{
                         <Typography variant="display2" style={{flex:1}}>
                             Welcome, {this.state.user.displayName}
                         </Typography>
-                        <Button onClick={()=>{firebase.auth().signOut();}} size="small"><Logout />signout</Button>
+                        <Button size="small"><User style={{marginRight:'5px'}} />Account</Button>
+                        <Button onClick={()=>{firebase.auth().signOut();}} size="small"><Logout style={{marginRight:'5px'}}/>signout</Button>
                     </div>:
                     null
                 }
@@ -413,10 +435,6 @@ export default class CustomerHome extends Component{
                 {
                     this.state.userData && this.state.user.displayName?
                     <div data-aos="fade-up">
-                        {
-                            this.state.userData.ordersLoading === true?
-                            <LinearProgress />:null
-                        }
                         <Typography variant="display1" className="push-down" data-aos="fade-up">
                             Your Past Orders
                         </Typography>
@@ -466,23 +484,41 @@ export default class CustomerHome extends Component{
                         <div id="map" className="push-down" data-aos="fade-up"></div>
                         {
                             this.state.step1complete === true?
+                            <Button fullWidth variant="raised" color="primary"><RemoveCart  style={{marginRight: '10px'}}/>EMPTY CART & CHANGE SHOP</Button>
+                            :null
+                        }
+                        {
+                            this.state.step1complete === true?
                             <Card data-aos="fade-up">
                                 <CardHeader 
                                     title={this.state.selectedShop.name}
+                                    subheader={this.state.selectedShop.address}
+                                    style={{paddingBottom:0}}
                                 />
-                                <CardContent>
-                                    <Typography variant="title">
-                                        Menu
-                                    </Typography>
+                                <CardContent style={{paddingTop:0}}>
                                     <Divider className="push-down"/>
                                     {
                                         this.state.selectedShop.pizzas?
-                                        <div>
-                                            Pizzas appear here
-                                        </div>:
-                                        <Typography variant="subheading" style={{textAlign:'center'}} className="push-down">
-                                            <i>This shop doesn't have any available pizzas right now.</i>
-                                        </Typography>
+                                        <div style={{display: 'flex', flexDirection: 'row', paddingTop: '20px'}}>
+                                            {   
+                                                this.state.selectedShop.pizzas?
+                                                this.state.selectedShop.pizzas.map((data, index)=>{
+                                                    return(
+                                                        <Card key={`pizza${index}`} style={{minWidth:'100px',marginRight:'10px'}}>
+                                                            <CardHeader
+                                                                title={data.name}
+                                                                subheader={`${data.averageRating} ⭐ | $${data.cost}`}
+                                                            />
+                                                            <CardMedia
+                                                                image={data.image}
+                                                                title={data.name}
+                                                            />
+                                                        </Card>
+                                                    );
+                                                })
+                                                :null
+                                            }
+                                        </div>:null
                                     }
                                 </CardContent>
                             </Card>:
