@@ -43,7 +43,7 @@ class DeliveryHome extends Component{
             },
             
             user:{
-                displayName:null,
+                displayName:'',
                 profilePic:null,
                 cuid: null
             },
@@ -101,22 +101,12 @@ class DeliveryHome extends Component{
     authListener(){
         this.fireBaseListener = firebase.auth().onAuthStateChanged((user) =>{
            if(user){
-            firebase.database().ref('Users/$(user.uid)/').once('value',
-                    (snap) => {
-                        this.setState({
-                            user: {
-                                displayName: user.displayName,
-                                profilePic:user.photoURL,
-                                uid: user.uid
-                            },
-                            
-                            userData:{
-                                variant: snap.val().type,
-                                orderList: snap.val().orders,   
-                            }    
-                       })
-                    }
-                )
+               console.log(user);
+               this.setState({
+                   user: {
+                       displayName: user.displayName
+                   }
+               })
             } 
         });
     }
@@ -162,7 +152,7 @@ class DeliveryHome extends Component{
         maxWidth: 345,
         border: '5px solid black',      
 };
-        
+        console.log(this.state.user.displayName);
         return ( 
             <div>
                 <div className="signup-page"> 
