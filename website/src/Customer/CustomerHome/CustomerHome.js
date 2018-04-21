@@ -7,11 +7,16 @@ import {Avatar,
         CardHeader,
         CardMedia,
         Dialog,
-        DialogTitle,
+        DialogActions,
         DialogContent,
         DialogContentText,
+        DialogTitle,
         Divider,
+        FormControl,
         IconButton,
+        Input,
+        InputAdornment,
+        InputLabel,
         LinearProgress,
         MenuItem,
         Snackbar,
@@ -21,8 +26,12 @@ import * as firebase from 'firebase';
 import * as GoogleMapsLoader from 'google-maps';
 import Close from 'material-ui-icons/Close';
 import Logout from 'material-ui-icons/ExitToApp';
-import RemoveCart from 'material-ui-icons/RemoveCircle';
+import RemoveCart from 'material-ui-icons/RemoveShoppingCart';
+import Shop from 'material-ui-icons/Store';
+import AddShoppingCart from 'material-ui-icons/AddShoppingCart';
 import User from 'material-ui-icons/Face';
+import Details from 'material-ui-icons/LibraryBooks';
+import Comment from 'material-ui-icons/Comment';
 import './CustomerHome.css';
 import axios from 'axios';
 
@@ -47,7 +56,22 @@ export default class CustomerHome extends Component{
             notifyMessage: '',
             step1complete: false,
             selectedShop: null,
-            step2complete: false
+            step2complete: false,
+            confirm : {
+                show: false,
+                title: '',
+                message: '',
+                actions: {
+                    accept: {
+                        text: '',
+                        callBack: ()=>{}
+                    },
+                    reject:{
+                        text: '',
+                        callBack: ()=>{}
+                    }
+                }
+            }
         }
         this.fireBaseListener = null;
         this.authListener = this.authListener.bind(this);
@@ -56,9 +80,23 @@ export default class CustomerHome extends Component{
         this.updateDeliverer = this.updateDeliverer.bind(this);
         this.notify = this.notify.bind(this);
         this.loadMap = this.loadMap.bind(this);
+        this.alert = this.alert.bind(this);
     }
     componentDidMount() {
         this.authListener();
+    }
+    alert(title, message, accept={text: '', callBack: ()=>{}}, reject={text: '', callBack: ()=>{}}){
+        this.setState({
+            confirm: {
+                show: true,
+                title: title,
+                message: message,
+                actions : {
+                    accept: accept,
+                    reject: reject
+                }
+            }
+        })
     }
     notify(message){
         this.setState({
@@ -99,6 +137,7 @@ export default class CustomerHome extends Component{
                 axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/getClosestShops',results)
                 .then((closeShops)=>{
                     var shops = closeShops.data.shops;
+                    shops = shops.slice(0,3);
                     shops.forEach((data, index)=>{
                         var tempMarker = new google.maps.Marker({
                             position: new google.maps.LatLng(data.location.x,data.location.y),
@@ -108,38 +147,233 @@ export default class CustomerHome extends Component{
                         tempMarker.setLabel(data.name);
                         tempMarker.addListener('click', ()=>{
                             this.setState({processing: true})
-                            if (data.pizzas){
-                                axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/getPizzas',{pizzas: data.pizzas})
-                                .then((pizzaData)=>{
-                                    data.pizzas = pizzaData.data;                                    
-                                    tempMarker.setOpacity(1);
-                                    restraunts.forEach((r,i)=>{
-                                        r.setMap(null);
+                            var hasCart = this.state.userData.cart? true: false;
+                            if (hasCart) {
+                                if (this.state.userData.cart.gmap_id !== data.gmap_id){
+                                    var found = false, foundName = '';
+                                    shops.forEach((checkGmap)=>{
+                                        if (checkGmap.gmap_id === this.state.userData.cart.gmap_id){
+                                            found = true;
+                                            foundName = checkGmap.name;
+                                        }
                                     })
-                                    restraunts = [];
-                                    tempMarker.setMap(customerMap);
-                                    tempMarker.setZIndex(100);
-                                    positionMarker.setMap(null);
-                                    customerMap.setCenter(new google.maps.LatLng(data.location.x, data.location.y));
-                                    document.getElementById('map').style.height = '100px';
-                                    this.setState({
-                                        processing: false,
-                                        step1complete: true,
-                                        selectedShop: data
-                                    });
-                                    this.notify(`Let's get your order from ${data.name} started! 😊`);
-                                }).catch((error)=>{
-                                    this.setState({
-                                        processing: false
-                                    })
-                                    this.notify("Couldn't get the shop's details. 😟");
-                                })
+                                    if (found){
+                                        this.alert(
+                                            'Empty cart?',
+                                            `Items from another shop are in your cart - do you want to empty your cart and continue? If not - cancel and select ${foundName} to continue.`,
+                                            {
+                                                text: 'Empty & Continue',
+                                                callBack: ()=>{
+                                                    firebase.database().ref(`Users/${this.state.user.uid}/cart`).set({}).then(()=>{
+                                                        this.notify("Emptied your cart 🛒");
+                                                        this.setState({
+                                                            confirm : {
+                                                                show: false,
+                                                                title: '',
+                                                                message: '',
+                                                                actions: {
+                                                                    accept: {
+                                                                        text: '',
+                                                                        callBack: ()=>{}
+                                                                    },
+                                                                    reject:{
+                                                                        text: '',
+                                                                        callBack: ()=>{}
+                                                                    }
+                                                                }
+                                                            }
+                                                        })
+                                                        if (data.pizzas){
+                                                            axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/getPizzas',{pizzas: data.pizzas})
+                                                            .then((pizzaData)=>{
+                                                                data.pizzas = pizzaData.data;                                    
+                                                                tempMarker.setOpacity(1);
+                                                                restraunts.forEach((r,i)=>{
+                                                                    r.setMap(null);
+                                                                })
+                                                                restraunts = [];
+                                                                tempMarker.setMap(customerMap);
+                                                                tempMarker.setZIndex(100);
+                                                                positionMarker.setMap(null);
+                                                                customerMap.setCenter(new google.maps.LatLng(data.location.x, data.location.y));
+                                                                document.getElementById('map').style.height = '100px';
+                                                                this.setState({
+                                                                    processing: false,
+                                                                    step1complete: true,
+                                                                    selectedShop: data
+                                                                });
+                                                                this.notify(`Let's get your order from ${data.name} started! 😊`);
+                                                            }).catch((error)=>{
+                                                                this.setState({
+                                                                    processing: false
+                                                                })
+                                                                this.notify("Couldn't get the shop's details. 😟");
+                                                            })
+                                                        } else {
+                                                            this.setState({
+                                                                processing:false
+                                                            })
+                                                            this.notify("This shop doesn't have any 🍕's yet.");
+                                                        }
+                                                    })
+                                                }
+                                            },
+                                            {
+                                                text: 'Keep Cart',
+                                                callBack: ()=>{
+                                                    this.setState({
+                                                        processing: false,
+                                                        confirm : {
+                                                            show: false,
+                                                            title: '',
+                                                            message: '',
+                                                            actions: {
+                                                                accept: {
+                                                                    text: '',
+                                                                    callBack: ()=>{}
+                                                                },
+                                                                reject:{
+                                                                    text: '',
+                                                                    callBack: ()=>{}
+                                                                }
+                                                            }
+                                                        }
+                                                    })
+                                                }
+                                            }
+                                        )
+                                    } else {
+                                        firebase.database().ref(`Users/${this.state.user.uid}/cart`).set({}).then(()=>{
+                                            this.alert(
+                                                'Emptied Cart',
+                                                "Emptied your cart because you had items from a shop that isn't available from your current location.",
+                                                {
+                                                    text: 'Okay',
+                                                    callBack: ()=>{
+                                                        this.setState({
+                                                            processing: false,
+                                                            confirm : {
+                                                                show: false,
+                                                                title: '',
+                                                                message: '',
+                                                                actions: {
+                                                                    accept: {
+                                                                        text: '',
+                                                                        callBack: ()=>{}
+                                                                    },
+                                                                    reject:{
+                                                                        text: '',
+                                                                        callBack: ()=>{}
+                                                                    }
+                                                                }
+                                                            }
+                                                        })
+                                                    }
+                                                }
+                                            )
+                                            if (data.pizzas){
+                                                axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/getPizzas',{pizzas: data.pizzas})
+                                                .then((pizzaData)=>{
+                                                    data.pizzas = pizzaData.data;                                    
+                                                    tempMarker.setOpacity(1);
+                                                    restraunts.forEach((r,i)=>{
+                                                        r.setMap(null);
+                                                    })
+                                                    restraunts = [];
+                                                    tempMarker.setMap(customerMap);
+                                                    tempMarker.setZIndex(100);
+                                                    positionMarker.setMap(null);
+                                                    customerMap.setCenter(new google.maps.LatLng(data.location.x, data.location.y));
+                                                    document.getElementById('map').style.height = '100px';
+                                                    this.setState({
+                                                        processing: false,
+                                                        step1complete: true,
+                                                        selectedShop: data
+                                                    });
+                                                    this.notify(`Let's get your order from ${data.name} started! 😊`);
+                                                }).catch((error)=>{
+                                                    this.setState({
+                                                        processing: false
+                                                    })
+                                                    this.notify("Couldn't get the shop's details. 😟");
+                                                })
+                                            } else {
+                                                this.setState({
+                                                    processing:false
+                                                })
+                                                this.notify("This shop doesn't have any 🍕's yet.");
+                                            }
+                                        })
+                                    }
+                                } else {
+                                    if (data.pizzas){
+                                        axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/getPizzas',{pizzas: data.pizzas})
+                                        .then((pizzaData)=>{
+                                            data.pizzas = pizzaData.data;                                    
+                                            tempMarker.setOpacity(1);
+                                            restraunts.forEach((r,i)=>{
+                                                r.setMap(null);
+                                            })
+                                            restraunts = [];
+                                            tempMarker.setMap(customerMap);
+                                            tempMarker.setZIndex(100);
+                                            positionMarker.setMap(null);
+                                            customerMap.setCenter(new google.maps.LatLng(data.location.x, data.location.y));
+                                            document.getElementById('map').style.height = '100px';
+                                            this.setState({
+                                                processing: false,
+                                                step1complete: true,
+                                                selectedShop: data
+                                            });
+                                            this.notify(`Let's get your order from ${data.name} started! 😊`);
+                                        }).catch((error)=>{
+                                            this.setState({
+                                                processing: false
+                                            })
+                                            this.notify("Couldn't get the shop's details. 😟");
+                                        })
+                                    } else {
+                                        this.setState({
+                                            processing:false
+                                        })
+                                        this.notify("This shop doesn't have any 🍕's yet.");
+                                    }
+                                }
                             } else {
-                                this.setState({
-                                    processing:false
-                                })
-                                this.notify("This shop doesn't have any 🍕's yet.");
+                                if (data.pizzas){
+                                    axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/getPizzas',{pizzas: data.pizzas})
+                                    .then((pizzaData)=>{
+                                        data.pizzas = pizzaData.data;                                    
+                                        tempMarker.setOpacity(1);
+                                        restraunts.forEach((r,i)=>{
+                                            r.setMap(null);
+                                        })
+                                        restraunts = [];
+                                        tempMarker.setMap(customerMap);
+                                        tempMarker.setZIndex(100);
+                                        positionMarker.setMap(null);
+                                        customerMap.setCenter(new google.maps.LatLng(data.location.x, data.location.y));
+                                        document.getElementById('map').style.height = '100px';
+                                        this.setState({
+                                            processing: false,
+                                            step1complete: true,
+                                            selectedShop: data
+                                        });
+                                        this.notify(`Let's get your order from ${data.name} started! 😊`);
+                                    }).catch((error)=>{
+                                        this.setState({
+                                            processing: false
+                                        })
+                                        this.notify("Couldn't get the shop's details. 😟");
+                                    })
+                                } else {
+                                    this.setState({
+                                        processing:false
+                                    })
+                                    this.notify("This shop doesn't have any 🍕's yet.");
+                                }
                             }
+
                         })
                         restraunts.push(tempMarker);
                     })
@@ -168,7 +402,8 @@ export default class CustomerHome extends Component{
                             },
                             userData : {
                                 variant: snap.val().type,
-                                orderList: snap.val().orders
+                                orderList: snap.val().orders,
+                                cart: snap.val().cart
                             }
                         })
                         if (snap.val().location){
@@ -291,16 +526,71 @@ export default class CustomerHome extends Component{
     render() {
         return(
             <div style={{padding:'50px 100px'}}>
+                <div className="top-loading">
+                {/*=============TOP PAGE LOADING BAR=============*/}
                 {
                     this.state.processing?
                     <LinearProgress /> : null
                 }
+                </div>
+                {/*=============NOTIFCATION SNACKBAR=============*/}
                 <Snackbar 
                     onClose={()=>{this.setState({notify:false, notifyMessage: ''})}}
                     open={this.state.notify}
                     message={this.state.notifyMessage}
                     autoHideDuration={2000}
                 />
+                {/*=============EMPTY CONFIRMATION DIALOG=============*/}
+                <Dialog
+                    onClose={()=>{
+                        this.setState({
+                            confirm : {
+                                show: false,
+                                title: '',
+                                message: '',
+                                actions: {
+                                    accept: {
+                                        text: '',
+                                        callBack: ()=>{}
+                                    },
+                                    reject:{
+                                        text: '',
+                                        callBack: ()=>{}
+                                    }
+                                }
+                            }
+                        })
+                    }} 
+                    open={this.state.confirm.show} 
+                    disableBackdropClick={true} 
+                    disableEscapeKeyDown={true}
+                    aria-labelledby="alert-dialog-title"
+                    aria-describedby="alert-dialog-description"
+                >
+                    <DialogTitle id="alert-dialog-title">{this.state.confirm.title}</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            {this.state.confirm.message}
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        {
+                            this.state.confirm.actions.reject.text !== ''?
+                            <Button color="secondary" onClick={()=>{this.state.confirm.actions.reject.callBack()}}>
+                                {this.state.confirm.actions.reject.text}
+                            </Button>:
+                            null
+                        }
+                        {
+                            this.state.confirm.actions.accept.text !== ''?
+                            <Button color="primary" variant="raised" onClick={()=>{this.state.confirm.actions.accept.callBack()}}>
+                                {this.state.confirm.actions.accept.text}
+                            </Button>:
+                            null
+                        }
+                    </DialogActions>
+                </Dialog>
+                {/*=============VIEW ORDER DETAILS=============*/}
                 <Dialog 
                     onClose={()=>{this.hideDetails(false)}} 
                     open={this.state.showDetails} 
@@ -325,6 +615,8 @@ export default class CustomerHome extends Component{
                         <DialogContent>
                             <DialogContentText>
                                 Order# {this.state.userData.orderList[this.state.selectedIndex]}
+                                <br />
+                                Total: ${this.state.userData.orders[this.state.selectedIndex].total}
                                 <br />
                                 Rate your order and deliverers below
                                 <br />
@@ -402,6 +694,56 @@ export default class CustomerHome extends Component{
                                                 <strong>
                                                 {pizza.rating} <span role="img" aria-label="star">⭐</span>
                                                 </strong>
+                                                {
+                                                    pizza.rating <=3 ?                                                    
+                                                        pizza.complaint?
+                                                        <TextField 
+                                                            fullWidth
+                                                            multiline
+                                                            label={`Comment for ${pizza.name}`}
+                                                            disabled
+                                                            rowsMax="2"
+                                                            value={pizza.complaint}
+                                                        />:
+                                                        <div>
+                                                            <TextField 
+                                                                fullWidth
+                                                                multiline
+                                                                label={`Comment for ${pizza.name}`}
+                                                                rowsMax="2"
+                                                                id={`pizzaComplaint-${key}`}
+                                                            />
+                                                            <Button 
+                                                                fullWidth 
+                                                                color="secondary"
+                                                                onClick={
+                                                                    ()=>{
+                                                                        var value = document.getElementById(`pizzaComplaint-${key}`).value;
+                                                                        if(value && value !== ""){
+                                                                            var old = this.state.userData;
+                                                                            old.orders[this.state.selectedIndex].pizzaRatings[key].complaint = value;
+                                                                            this.setState({
+                                                                                userData: old
+                                                                            });
+                                                                            firebase.database().ref(`Orders/${this.state.userData.orderList[this.state.selectedIndex]}/`)
+                                                                            .set(this.state.userData.orders[this.state.selectedIndex])
+                                                                            .then(()=>{
+                                                                                this.notify("We'll let the shop know what went wrong 👍");
+                                                                            }).catch(()=>{
+                                                                                this.notify("Couldn't save your comment, please try again in a bit.");
+                                                                            })
+                                                                        } else {
+                                                                            this.notify("You can't save an empty comment.");
+                                                                        }
+                                                                    }
+                                                                }
+                                                            >
+                                                                <Comment style={{marginRight:'10px'}}/>
+                                                                Save Comment
+                                                            </Button>
+                                                        </div>
+                                                    :null
+                                                }
                                             </Typography>
                                         );
                                     }
@@ -412,6 +754,7 @@ export default class CustomerHome extends Component{
                     <div></div>
                 }
                 </Dialog>
+                {/*=============WELCOME USER HEADER=============*/}                
                 {
                     this.state.user.displayName && this.state.user.profilePicture ?
                     <div className="customer-header" data-aos="fade-up">
@@ -432,11 +775,16 @@ export default class CustomerHome extends Component{
                     this.state.user.displayName ?
                     <Divider className="push-down" data-aos="fade-up" />:null
                 }
+                {/*=============MAIN CONTENT BELOW=============*/}
                 {
                     this.state.userData && this.state.user.displayName?
                     <div data-aos="fade-up">
+                        {/*=============PAST ORDERS SECTION=============*/}
                         <Typography variant="display1" className="push-down" data-aos="fade-up">
                             Your Past Orders
+                        </Typography>
+                        <Typography variant="subheading" className="push-down">
+                            Check details, rate and leave comments for your past orders.
                         </Typography>
                         <div className="past-orders" data-aos="fade-up">
                             {
@@ -447,8 +795,9 @@ export default class CustomerHome extends Component{
                                                 <CardHeader 
                                                     title={data.shopName}
                                                     subheader={`Order # ${this.state.userData.orderList[index]}`}
+                                                    style={{paddingBottom: 0}}
                                                 />
-                                                <CardContent>
+                                                <CardContent style={{paddingBottom:0, paddingTop: 0}}>
                                                     {
                                                         data.delivererRating === 0 ? 
                                                         <Typography variant="subheading" style={{color:'red'}}>
@@ -461,9 +810,17 @@ export default class CustomerHome extends Component{
                                                     <Typography variant="subheading" style={{fontSize:'10.5px'}}>
                                                         <i>See details to rate pizzas and deliverer.</i>
                                                     </Typography>
+                                                    <Divider />
                                                 </CardContent>
                                                 <CardActions>
-                                                    <Button onClick={()=>{this.showDetails(index)}}>See details & Rate</Button>
+                                                    <Button 
+                                                        fullWidth
+                                                        onClick={()=>{this.showDetails(index)}} 
+                                                        color="primary" 
+                                                        size="small">
+                                                        <Details style={{marginRight:'10px'}} />
+                                                        See details
+                                                    </Button>
                                                 </CardActions>
                                             </Card>
                                         );
@@ -475,6 +832,7 @@ export default class CustomerHome extends Component{
                             }
                         </div>
                         <Divider className="push-down" data-aos="fade-up" />
+                        {/*=============NEW ORDERS SECTION=============*/}
                         <Typography variant="display1" className="push-down" data-aos="fade-up">
                             Feeling Hungry?
                         </Typography>
@@ -482,11 +840,25 @@ export default class CustomerHome extends Component{
                             Get started by choosing a shop.
                         </Typography>
                         <div id="map" className="push-down" data-aos="fade-up"></div>
+                        {/*=============EMPTY & CHANGE=============*/}
                         {
                             this.state.step1complete === true?
-                            <Button fullWidth variant="raised" color="primary"><RemoveCart  style={{marginRight: '10px'}}/>EMPTY CART & CHANGE SHOP</Button>
+                            <Button 
+                                fullWidth
+                                variant="raised" 
+                                color="primary"
+                                onClick={()=>{
+                                    window.location.reload();
+                                }}
+                            >
+                                <RemoveCart  style={{marginRight: '10px'}}/>
+                                EMPTY CART  &
+                                <Shop style={{marginLeft:'10px',marginRight:'10px'}} />
+                                CHANGE SHOP
+                            </Button>
                             :null
                         }
+                        {/*=============MENU AND SHOP DETAILS=============*/}
                         {
                             this.state.step1complete === true?
                             <Card data-aos="fade-up">
@@ -504,15 +876,33 @@ export default class CustomerHome extends Component{
                                                 this.state.selectedShop.pizzas?
                                                 this.state.selectedShop.pizzas.map((data, index)=>{
                                                     return(
-                                                        <Card key={`pizza${index}`} style={{minWidth:'100px',marginRight:'10px'}}>
-                                                            <CardHeader
-                                                                title={data.name}
-                                                                subheader={`${data.averageRating} ⭐ | $${data.cost}`}
-                                                            />
+                                                        <Card key={`pizza${index}`} style={{minWidth:'200px',marginRight:'10px'}}>
                                                             <CardMedia
+                                                                style={{height:'100px'}}
                                                                 image={data.image}
                                                                 title={data.name}
                                                             />
+                                                            <CardHeader
+                                                                title={data.name}
+                                                                subheader={`${data.averageRating} ⭐ | $${data.cost}`}
+                                                                style={{paddingBottom:0}}
+                                                            />
+                                                            <CardContent style={{paddingTop:0}}>
+                                                                <FormControl>
+                                                                    <InputLabel htmlFor={`pizzaItem-${index}`}>Quantity</InputLabel>
+                                                                    <Input
+                                                                        id={`pizzaItem-${index}`}
+                                                                        type="number"
+                                                                        endAdornment={
+                                                                            <InputAdornment position="end">
+                                                                                <IconButton>
+                                                                                    <AddShoppingCart />
+                                                                                </IconButton>
+                                                                            </InputAdornment >
+                                                                        }
+                                                                    />
+                                                                </FormControl>
+                                                            </CardContent>
                                                         </Card>
                                                     );
                                                 })

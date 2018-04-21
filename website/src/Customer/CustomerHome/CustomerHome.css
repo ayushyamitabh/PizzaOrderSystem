@@ -16,6 +16,9 @@
     width: 100%;
     margin-top: 5px;
     border-radius: 5px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 10px;
 }
 .no-orders{
     justify-self: center;
@@ -34,4 +37,13 @@
 }
 .push-down{
     margin-top: 10px !important;
+}
+.top-loading{
+    width: 100%;
+    height: 20px;
+    min-height: 10px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
 }
