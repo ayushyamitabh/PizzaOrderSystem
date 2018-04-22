@@ -19,6 +19,8 @@ import {Avatar,
 import logo from '../Resources/logo.png';
 import Visible from 'material-ui-icons/Visibility';
 import Hidden from 'material-ui-icons/VisibilityOff';
+import Next from 'material-ui-icons/CheckCircle';
+import Signout from 'material-ui-icons/Cancel';
 import Code from 'material-ui-icons/Code';
 import App from 'material-ui-icons/GetApp';
 import Email from 'material-ui-icons/Email';
@@ -33,50 +35,10 @@ class Home extends Component {
             showPassword: false,
             notify: false,
             notifyMsg: '',
-            processing: true
+            processing: this.props.loggedIn
         };
         this.handleChange = this.handleChange.bind(this);
         this.login = this.login.bind(this);
-    }
-    componentDidMount() {
-        firebase.auth().onAuthStateChanged((user)=>{
-            if (user) {
-                console.log("Signed in.", user.uid);
-                /*
-                    User is logged in, check type and redirect here
-                    How to redirect -- this.props.history.push('/sign-up');
-
-                */
-               firebase.database().ref(`Users/${user.uid}/type`).once('value', 
-                    (snap)=>{
-                        if (snap.val()) {
-                            const userType = snap.val();
-                            if (userType === 'customer') {
-                                this.props.history.push(`/customer/home`);
-                            } else if (userType === 'cook'){                                
-                                this.props.history.push(`/cook/home`);
-                            } else if (userType === 'deliverer'){                                
-                                this.props.history.push(`/deliverer/home`);
-                            } else if (userType === 'manager'){                                
-                                this.props.history.push(`/manager/home`);
-                            }
-                        } else {
-                            this.setState({
-                                notify: true,
-                                notifyMsg: 'Oops... something went wrong fetching your data 😟',
-                                processing: false
-                            });
-                            firebase.auth().signOut();
-                        }
-                    }
-                )
-            } else {
-                console.log("Signed out.");
-                this.setState({
-                    processing: false
-                })
-            }
-        })
     }
     login() {
         this.setState({
@@ -94,6 +56,12 @@ class Home extends Component {
                 });
             }
         )
+    }
+    shouldComponentUpdate(nextProps, nextState) {
+        if (nextProps.loggedIn !== this.state.processing) {
+            nextState.processing = nextProps.loggedIn;
+        }
+        return true;
     }
     handleChange = name => event =>{
         this.setState({
@@ -134,74 +102,122 @@ class Home extends Component {
                             title="Sign In"
                             subheader="Customers, Cooks, Deliverers & Managers"
                         />
-                        <CardContent className="login-form-content">
-                            <TextField
-                                disabled={this.state.processing}
-                                className="username"
-                                id="username"
-                                label="Username"
-                                value={this.state.username}
-                                onChange={this.handleChange('username')}
-                                fullWidth
-                                required
-                                type="email"
-                            />
-                            <TextField
-                                disabled={this.state.processing}
-                                className="password"
-                                id="password"
-                                label="Password"
-                                value={this.state.password}
-                                onChange={this.handleChange('password')}
-                                fullWidth
-                                required
-                                type={this.state.showPassword? "text" : "password"}
-                                InputProps={{
-                                    endAdornment: <InputAdornment position="end">
-                                                    <IconButton onClick={()=>{this.setState({showPassword: !this.state.showPassword})}}>
-                                                        {this.state.showPassword ? <Visible /> : <Hidden />}
-                                                    </IconButton>
-                                                </InputAdornment>,
-                                }}
-                            />
-                            <Button 
-                                disabled={this.state.processing}
-                                variant="raised" 
-                                color="primary" 
-                                fullWidth 
-                                onClick={()=>{this.login()}}
-                                className="login">
-                                Sign-In
-                            </Button>
-                            <Typography 
-                                variant="subheading" 
-                                className="signup-line">
-                                Don't have an account? Signup now!
-                            </Typography>
-                            <Button 
-                                disabled={this.state.processing}
-                                variant="raised" 
-                                color="secondary" 
-                                fullWidth 
-                                className="login"
-                                component={Link} to="/sign-up">
-                                Sign-Up
-                            </Button>
-                            <Divider
-                                style={{marginTop:'10px'}}/>
-                            <Button 
-                                disabled={this.state.processing}
-                                fullWidth 
-                                className="login"
-                                component={Link} to="/add-shop"
-                            >
-                                I WANT TO ADD A SHOP
-                            </Button>
-                        </CardContent>
+                        {
+                            this.props.loggedIn === true ? 
+                            <CardContent className="login-form-content">
+                                <Typography 
+                                    className="push-down"
+                                    variant="subheading"
+                                >
+                                    Welcome, {firebase.auth().currentUser.displayName}!
+                                </Typography>
+                                <Button 
+                                    fullWidth
+                                    color="primary"
+                                    variant="raised"
+                                    className="push-down"
+                                    onClick={()=>{
+                                        if (this.props.userType === 'customer') {
+                                            this.props.history.push(`/customer/home`);
+                                        } else if (this.props.userType === 'cook'){                                
+                                            this.props.history.push(`/cook/home`);
+                                        } else if (this.props.userType === 'deliverer'){                                
+                                            this.props.history.push(`/deliverer/home`);
+                                        } else if (this.props.userType === 'manager'){                                
+                                            this.props.history.push(`/manager/home`);
+                                        }
+                                    }}
+                                >
+                                    <Next style={{marginRight:'10px'}} />
+                                    CONTINUE TO YOUR PORTAL
+                                </Button>
+                                <Button
+                                    fullWidth
+                                    color="secondary"
+                                    variant="raised"
+                                    className="push-down"
+                                    onClick={()=>{
+                                        firebase.auth().signOut();
+                                    }}
+                                >
+                                    <Signout style={{marginRight:'10px'}} />
+                                    SIGN OUT
+                                </Button>
+                            </CardContent>:
+                            <CardContent className="login-form-content">
+                                <TextField
+                                    disabled={this.state.processing}
+                                    className="username"
+                                    id="username"
+                                    label="Username"
+                                    value={this.state.username}
+                                    onChange={this.handleChange('username')}
+                                    fullWidth
+                                    required
+                                    type="email"
+                                />
+                                <TextField
+                                    disabled={this.state.processing}
+                                    className="password"
+                                    id="password"
+                                    label="Password"
+                                    value={this.state.password}
+                                    onChange={this.handleChange('password')}
+                                    fullWidth
+                                    required
+                                    type={this.state.showPassword? "text" : "password"}
+                                    InputProps={{
+                                        endAdornment: <InputAdornment position="end">
+                                                        <IconButton onClick={()=>{this.setState({showPassword: !this.state.showPassword})}}>
+                                                            {this.state.showPassword ? <Visible /> : <Hidden />}
+                                                        </IconButton>
+                                                    </InputAdornment>,
+                                    }}
+                                />
+                                <Button 
+                                    disabled={this.state.processing}
+                                    variant="raised" 
+                                    color="primary" 
+                                    fullWidth 
+                                    onClick={()=>{this.login()}}
+                                    className="login">
+                                    Sign-In
+                                </Button>
+                                <Typography 
+                                    variant="subheading" 
+                                    className="signup-line">
+                                    Don't have an account? Signup now!
+                                </Typography>
+                                <Button 
+                                    disabled={this.state.processing}
+                                    variant="raised" 
+                                    color="secondary" 
+                                    fullWidth 
+                                    className="login"
+                                    component={Link} to="/sign-up">
+                                    Sign-Up
+                                </Button>
+                                <Divider
+                                    style={{marginTop:'10px'}}/>
+                                <Button 
+                                    disabled={this.state.processing}
+                                    fullWidth 
+                                    className="login"
+                                    component={Link} to="/add-shop"
+                                >
+                                    I WANT TO ADD A SHOP
+                                </Button>
+                            </CardContent>
+                        }
+
                     </Card>
                     <Card className="login-form" style={{padding:'20px'}} data-aos="slide-left" >
                         <CardHeader title="About Us" />
                         <CardContent>
+                            <Typography variant="subheading">
+                                We've been making pizza for the last century. From Rome, Italy - we've perfected the pizza formula.
+                                We don't cut corners, we cut slices. We don't compromise in quality but we let our prices slack.
+                            </Typography>
                             <List>
                                 <ListItem button component='a' href="https://github.com/ayushyamitabh/PizzaOrderSystem">
                                     <Avatar>

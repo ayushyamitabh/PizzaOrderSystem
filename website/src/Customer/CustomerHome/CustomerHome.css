@@ -1,0 +1,37 @@
+.customer-header{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+.customer-header .user-avatar{
+    width: 70px;
+    height: 70px;
+    margin-right: 20px;
+}
+.past-orders{
+    display: flex;
+    flex-direction: row;
+    min-height: 100px;
+    width: 100%;
+    margin-top: 5px;
+    border-radius: 5px;
+}
+.no-orders{
+    justify-self: center;
+    align-self: center;
+    flex: 1;
+    text-align: center;
+}
+.order-card{
+    margin-right: 5px;
+    width: 300px;
+}
+#map{
+    width: 100%;
+    height: 500px;
+    border: 1px;
+}
+.push-down{
+    margin-top: 10px !important;
+}

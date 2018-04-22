@@ -4,8 +4,10 @@
   "private": true,
   "dependencies": {
     "aos": "^2.2.0",
+    "axios": "^0.18.0",
     "firebase": "^4.10.1",
     "google-maps": "^3.2.1",
+    "history": "^4.7.2",
     "material-ui": "^1.0.0-beta.35",
     "material-ui-icons": "^1.0.0-beta.35",
     "react": "^16.2.0",
