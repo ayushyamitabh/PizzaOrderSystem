@@ -248,34 +248,6 @@ export default class AddShop extends Component{
             })
             console.log(error);
         })
-        /*
-        firebase.database().ref('super').once('value', (snap)=>{
-            if (snap.val()){
-                firebase.auth().signInWithEmailAndPassword(snap.val().e, snap.val().p).then(()=>{
-                    const setData = {
-                        name: this.state.shop.name,
-                        location: this.state.shop.location,
-                        gmap_id: this.state.shop.gmap_id
-                    };
-                    firebase.database().ref(`Shops/${this.state.shop.shopUID}`).set(setData).then(
-                    ()=>{
-                        this.setState({
-                            notify: true,
-                            notifyMsg: "You're good to go! 👍",
-                            step2complete: true,
-                            processing: false
-                        })
-                        firebase.auth().signOut();
-                    },(err)=>{
-                        this.setState({
-                            notify: true,
-                            notifyMsg: err.message,
-                            processing: false
-                        })
-                    })
-                })
-            }
-        })*/
     }
     render() {
         return(

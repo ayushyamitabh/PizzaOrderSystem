@@ -2,7 +2,11 @@ import React, { Component } from 'react';
 import { Router, Route, Switch } from 'react-router-dom';
 import createHistory from 'history/createBrowserHistory';
 import DeliveryRoutes from './Delivery/DeliveryRoutes.js';
+<<<<<<< HEAD
 import CookRoutes from './Cook/CookRoutes.js';
+=======
+import CustomerRoutes from './Customer/CustomerRoutes.js';
+>>>>>>> master
 import Home from './Home/Home.js';
 import Signup from './Home/Signup/Signup.js';
 import AddShop from './Home/AddShop/AddShop.js';
@@ -94,6 +98,7 @@ class App extends Component {
                     <Route path="/add-shop" component={AddShop} />
                     <Route path="/deliverer" component={DeliveryRoutes} />
                     <Route path="/cook" component={CookRoutes} />
+                    <Route path="/customer" component={CustomerRoutes} />
                     <Route component={NotFound} />
                 </Switch>
                 </div>

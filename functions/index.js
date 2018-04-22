@@ -42,3 +42,67 @@ exports.doesShopExist = functions.https.onRequest((req, res)=>{
         })
     })
 })
+
+exports.getUserOrderData = functions.https.onRequest((req, res)=>{
+    return cors(req, res, ()=>{
+        var oData = [];
+        req.body.orders.forEach((data)=>{
+            admin.database().ref(`Orders/${data}`).once('value').then((snapshot)=>{
+                var order = snapshot.val();
+                if (order) {
+                    oData.push(order);
+                }
+                if (oData.length === req.body.orders.length) {
+                    res.status(200).send({orderData: oData});
+                }
+            }).catch((error)=>{
+                res.status(500).send("Couldn't get data from database");
+            })
+        })
+    })
+})
+
+exports.getClosestShops = functions.https.onRequest((req, res)=>{
+    return cors(req, res, ()=>{
+        var places = req.body;
+        admin.database().ref(`Shops/`).once('value').then((snapshot)=>{
+            var shops = snapshot.val();
+            if(shops){
+                var gmapIDs = [];
+                var result = [];
+                Object.keys(shops).forEach((shop)=>{
+                    gmapIDs.push(shops[shop].gmap_id);
+                })
+                places.forEach((place)=>{
+                    var ind = gmapIDs.indexOf(place.id);
+                    if(ind>=0){
+                        shops[Object.keys(shops)[ind]].address = place.formatted_address;
+                        result.push(shops[Object.keys(shops)[ind]]);
+                    }
+                })
+                res.status(200).send({shops:result});
+            }
+        }).catch((error)=>{
+            res.status(500).send("Couldn't get data from database");
+        })
+    })
+})
+
+exports.getPizzas = functions.https.onRequest((req, res)=>{
+    return cors(req, res, ()=>{
+        var idList = req.body.pizzas;
+        var dataList = [];
+        idList.forEach((id)=>{
+            admin.database().ref(`Pizzas/${id}`).once('value').then((snapshot)=>{
+                var pizzaData = snapshot.val();
+                pizzaData.id = id;
+                dataList.push(pizzaData);
+                if (dataList.length === idList.length){
+                    res.status(200).send(dataList);
+                }
+            }).catch((error)=>{
+                res.status(500).send("Couldn't get data from database");
+            })
+        })
+    })
+})
