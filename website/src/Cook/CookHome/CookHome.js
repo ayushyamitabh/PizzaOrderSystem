@@ -12,7 +12,7 @@ class CookHome extends Component {
         super(props);
         this.state = {
             cook: {
-                cookUID: '',
+                cookuid: '',
                 name: '',
                 shopUID: '',
                 pizzaID: '',
@@ -20,22 +20,42 @@ class CookHome extends Component {
                 DroppedPizzas: '',
                 WarnedCount: '',
                 warned: false,
+            },
+
+            user: {
+                displayName:''
             }
         };
+        this.authListener = this.authListener.bind(this);
+    }
+
+    componentDidMount() {
+        this.authListener();
+    }
+
+    authListener() {
+        this.fireBaseListener = firebase.auth().onAuthStateChanged((user) => {
+            if(user) {
+                this.setState({
+                    user: {
+                        displayName: user.displayName
+                    }
+                })
+            }
+        });
     }
 
     render() {
         return (
             <div>
-                <AppBar >
-                        <Toolbar>
-                            <Typography variant="title" color="inherit">
-                                <Button color ="secondary" variant = "raised"
-                                    component={Link} to="/" onClick={()=>{firebase.auth().signOut()}}> Logout
-                                </Button>
-                            </Typography>
-                        </Toolbar>
-                </AppBar>
+                <Typography variant="display2">
+                    Welcome, {this.state.user.displayName}
+                </Typography>
+                    <Typography variant="title" color="inherit">
+                        <Button color ="secondary" variant = "raised" style={{float: 'right'}}
+                                onClick={()=>{firebase.auth().signOut()}}> Logout
+                        </Button>
+                    </Typography>
             </div>
         );
     }
