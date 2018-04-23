@@ -104,7 +104,6 @@ class DeliveryHome extends Component{
     authListener(){
         this.fireBaseListener = firebase.auth().onAuthStateChanged((user) =>{
            if(user){
-               console.log(user.data);
                this.setState({
                    user: {
                            displayName:user.displayName,
@@ -112,19 +111,16 @@ class DeliveryHome extends Component{
                            uid: user.uid
                    }
                })
-               // uid not cuid
-               firebase.database().ref(`Users/${user.uid}`).once('value'),
-                   (snap) =>{
-                   this.setState({
-                       userData:{
-                           orders: snap.val().orders // this has to match the database reference so this would get the data under orders : {}
-                           
-                       }
-                       
-                   })  
-                   console.log(this.state.userData);
-               }      
-            } 
+               firebase.database().ref(`Users/${user.uid}`).once('value').then((snap)=>{
+                   if(snap.val()){
+                       this.setState({
+                           userData: {
+                               orders: snap.val().orders
+                           }
+                       })
+                   }
+               });
+            }
         });
     }
     
