@@ -5,6 +5,7 @@ import * as firebase from 'firebase'
 import {Avatar,
         Button,
         Card,
+        CardActions,
         CardContent,
         CardHeader,
         Divider,
@@ -25,12 +26,14 @@ import {Avatar,
 import AppBar from 'material-ui/AppBar';
 import Toolbar from 'material-ui/Toolbar';
 import MenuIcon from 'material-ui-icons/Menu';
-
+import Logout from 'material-ui-icons/ExitToApp';
+import User from 'material-ui-icons/Face';
+import Details from 'material-ui-icons/LibraryBooks';
 class DeliveryHome extends Component{
   constructor(props) {
         super(props);
         this.state = {
-            cook:{
+            deliverer:{
                 delivererID: '',
                 name: '',
                 shopID: '',
@@ -101,18 +104,31 @@ class DeliveryHome extends Component{
     authListener(){
         this.fireBaseListener = firebase.auth().onAuthStateChanged((user) =>{
            if(user){
-               console.log(user);
+               console.log(user.data);
                this.setState({
                    user: {
-                       displayName: user.displayName
+                           displayName:user.displayName,
+                           profilePic:user.photoURL,
+                           uid: user.uid
                    }
                })
+               // uid not cuid
+               firebase.database().ref(`Users/${user.uid}`).once('value'),
+                   (snap) =>{
+                   this.setState({
+                       userData:{
+                           orders: snap.val().orders // this has to match the database reference so this would get the data under orders : {}
+                           
+                       }
+                       
+                   })  
+                   console.log(this.state.userData);
+               }      
             } 
         });
     }
     
-    updateCustomer(index){
-        
+    updateCustomer(index){      
         const cuid = this.state.userData.orders[index].cuid;
         firebase.database().ref('Users/${cuid}').once('value').then ((snap) =>{
             if(snap.val()){
@@ -122,8 +138,7 @@ class DeliveryHome extends Component{
                 var c = b / (customerData.ratingCount +1);
                 customerData.averageRating = c;
                 customerData.ratingCount +=1;
-                firebase.database().ref('Users/$(cuid)').set(customerData).then (()=>{
-                    firebase.database().ref('Orders/${this.state.userData.orderList[index]}').set(this.state.userData.orders[index]).then(()=>{
+                firebase.database().ref('Users/$(cuid)').set(customerData).then (()=>{                  firebase.database().ref('Orders/${this.state.userData.orderList[index]}').set(this.state.userData.orders[index]).then(()=>{
                         this.setState({
                             processing:false                
                         })
@@ -152,29 +167,94 @@ class DeliveryHome extends Component{
         maxWidth: 345,
         border: '5px solid black',      
 };
-        console.log(this.state.user.displayName);
+        
         return ( 
-            <div>
+            <div style={{padding:'50px 100px'}}>
                 <div className="signup-page"> 
-                    <div className="delivererSection">
+                    <div className="custom-header" data-aos = "fade-up">
+                        <Avatar 
+                            alt={this.state.user.displayName}
+                            src={this.state.user.profilePicture}
+                            className="user-avatar"/>
+                        
                         <Typography variant="display2">
-                            Welcome, {this.state.user.displayName}
-                            
+                            Welcome, {this.state.user.displayName}  
                         </Typography>
-            
+                        <Button size="small"><User style={{marginRight:'5px'}} />Account</Button>
+                        <Button onClick={()=>{firebase.auth().signOut();}} size="small"><Logout style={{marginRight:'5px'}}/>signout</Button>
                     <Divider />
                     </div>
                 </div>
 
           
             
-                <div style={{marginTop:'25px'}}>
-                        <Typography  variant="display2" color ="inherit">
-                            Your Ratings will be displayed here. 
-                        </Typography>     
-                    
+                <div style={{marginTop:'25px',textAlign:'center'}}>
+                        <Typography variant="display1" className="push-down" color ="inherit" data-aos ="fade-up">
+                            Your Past Orders 
+                        </Typography>  
+
+                        <Typography variant="subheading" className="push-down">
+                            Check details, rate and leave comments for your past orders.
+                        </Typography>
+ 
                 </div>
+           
+            <div className="past-orders" data-aos="fade-up">
+                {
+                    this.state.userData.orders?
+                        this.state.userData.orders.map((data,index)=>{
+                            console.log(data);
+                            return(
+                                <Card key={index} data-aos="fade-left" className="order-card">
+                                    <CardHeader 
+                                        title={data.shopName}
+                                        style={{paddingBottom: 0}}/>
+                                           
+                                        <CardContent style={{paddingBottom:0, paddingTop: 0}}>
+                                            {
+                                          
+                                                data.customerRating === 0 ? 
+                                                    <Typography variant="subheading" style={{color:'red'}}>
+                                                        <i> Customer not rated yet</i>
+                                                    
+                                                    </Typography>:
+
+      
+                                                    <Typography variant="subheading">
+                                                        Customer Rating: <strong>{data.customerRating} <span role="img" aria-label="star">⭐</span></strong>
+                                                    </Typography>
+                                            }
+                                                    <Typography variant="subheading" style={{fontSize:'10.5px'}}>
+                                                        <i>See details to rate pizzas and deliverer.</i>
+                                                    </Typography>
+
+                                                    <Divider />
+                                                            
+                                        </CardContent>
+
+                                                <CardActions>
+                                                    <Button 
+                                                        fullWidth
+                                                        onClick={()=>{this.showDetails(index)}} 
+                                                        color="primary" 
+                                                        size="small">
+                                                        <Details style={{marginRight:'10px'}} />
+                                                        See details
+                                                    </Button>
+                                                </CardActions>
+                                            </Card>
+                                );
+                            })
+                    :
+                     <Typography variant="subheading" className="no-orders">{this.state.userData.ordersMesage}
+                     </Typography>
+                }
+      
+                
+            </div>
+
             <Divider />
+            
                 <div className="column" data-aos ="flip-up"> 
                     <Card  data-aos ="flip-up" style ={cardDescription} >
                         <CardContent>
