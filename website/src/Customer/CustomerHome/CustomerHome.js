@@ -29,6 +29,7 @@ import Logout from 'material-ui-icons/ExitToApp';
 import RemoveCart from 'material-ui-icons/RemoveShoppingCart';
 import Shop from 'material-ui-icons/Store';
 import AddShoppingCart from 'material-ui-icons/AddShoppingCart';
+import Cart from 'material-ui-icons/ShoppingCart';
 import User from 'material-ui-icons/Face';
 import Details from 'material-ui-icons/LibraryBooks';
 import Comment from 'material-ui-icons/Comment';
@@ -56,6 +57,7 @@ export default class CustomerHome extends Component{
             notifyMessage: '',
             step1complete: false,
             selectedShop: null,
+            selectedGMAPID: null,
             step2complete: false,
             confirm : {
                 show: false,
@@ -138,12 +140,18 @@ export default class CustomerHome extends Component{
                 .then((closeShops)=>{
                     var shops = closeShops.data.shops;
                     shops = shops.slice(0,3);
+                    if (shops.length === 0){
+                        this.notify("Couldn't find any shops near you.")
+                    }
+                    var bounds = new google.maps.LatLngBounds();
+                    bounds.extend(centerLocation);
                     shops.forEach((data, index)=>{
                         var tempMarker = new google.maps.Marker({
                             position: new google.maps.LatLng(data.location.x,data.location.y),
                             map: customerMap,
                             opacity: 0.5
                         });
+                        bounds.extend(tempMarker.getPosition());
                         tempMarker.setLabel(data.name);
                         tempMarker.addListener('click', ()=>{
                             this.setState({processing: true})
@@ -200,7 +208,8 @@ export default class CustomerHome extends Component{
                                                                 this.setState({
                                                                     processing: false,
                                                                     step1complete: true,
-                                                                    selectedShop: data
+                                                                    selectedShop: data,
+                                                                    selectedGMAPID: data.gmap_id
                                                                 });
                                                                 this.notify(`Let's get your order from ${data.name} started! 😊`);
                                                             }).catch((error)=>{
@@ -288,7 +297,8 @@ export default class CustomerHome extends Component{
                                                     this.setState({
                                                         processing: false,
                                                         step1complete: true,
-                                                        selectedShop: data
+                                                        selectedShop: data,
+                                                        selectedGMAPID: data.gmap_id
                                                     });
                                                     this.notify(`Let's get your order from ${data.name} started! 😊`);
                                                 }).catch((error)=>{
@@ -323,7 +333,8 @@ export default class CustomerHome extends Component{
                                             this.setState({
                                                 processing: false,
                                                 step1complete: true,
-                                                selectedShop: data
+                                                selectedShop: data,
+                                                selectedGMAPID: data.gmap_id
                                             });
                                             this.notify(`Let's get your order from ${data.name} started! 😊`);
                                         }).catch((error)=>{
@@ -357,7 +368,8 @@ export default class CustomerHome extends Component{
                                         this.setState({
                                             processing: false,
                                             step1complete: true,
-                                            selectedShop: data
+                                            selectedShop: data,
+                                            selectedGMAPID: data.gmap_id
                                         });
                                         this.notify(`Let's get your order from ${data.name} started! 😊`);
                                     }).catch((error)=>{
@@ -377,6 +389,7 @@ export default class CustomerHome extends Component{
                         })
                         restraunts.push(tempMarker);
                     })
+                    customerMap.fitBounds(bounds);
                     this.setState({
                         processing: false
                     })
@@ -519,6 +532,49 @@ export default class CustomerHome extends Component{
             })
         })
     }
+    addToCart(index, quantity){
+        var pizza = this.state.selectedShop.pizzas[index];
+        if (quantity>=1){
+            if(this.state.userData.cart){
+                if(this.state.userData.cart.items[pizza.id]){
+                    var old = this.state.userData;
+                    old.cart.total += Number(quantity) * old.cart.items[pizza.id].unitPrice;
+                    old.cart.items[pizza.id].quantity += Number(quantity);
+                    this.setState({
+                        userData: old
+                    }) 
+                } else {
+                    var old = this.state.userData;
+                    old.cart.items[pizza.id] = {
+                        unitPrice: pizza.cost,
+                        quantity: Number(quantity)
+                    };
+                    old.cart.total += Number(quantity) * old.cart.items[pizza.id].unitPrice;
+                    this.setState({
+                        userData: old
+                    })
+                }
+            } else {
+                var old = this.state.userData;
+                old.cart = {
+                    gmap_id: this.state.selectedGMAPID,
+                    items: {
+                        [pizza.id]: {
+                            unitPrice: pizza.cost,
+                            quantity: Number(quantity)
+                        }
+                    },
+                    total: Number(quantity) * pizza.cost
+                };
+                this.setState({
+                    userData: old
+                })
+            }            
+            firebase.database().ref(`Users/${this.state.user.uid}/cart`).set(this.state.userData.cart).then(()=>{
+                this.notify(`Updated your 🛒 - added ${quantity} x ${pizza.name}`);
+            })
+        }
+    }
     componentWillUnmount() {
         this.fireBaseListener && this.fireBaseListener();
         this.authListener = undefined;
@@ -526,8 +582,22 @@ export default class CustomerHome extends Component{
     render() {
         return(
             <div style={{padding:'50px 100px'}}>
-                <div className="top-loading">
+                {/*=============CART FLOATING BUTTON=============*/}            
+                {
+                    this.state.userData.cart?
+                    <Button 
+                        variant="fab" 
+                        color="primary" 
+                        aria-label="Your Cart" 
+                        className="cart-button"
+                        data-aos="fade-left"
+                    >
+                        <Cart />
+                    </Button>
+                    :null
+                }                
                 {/*=============TOP PAGE LOADING BAR=============*/}
+                <div className="top-loading">
                 {
                     this.state.processing?
                     <LinearProgress /> : null
@@ -848,7 +918,10 @@ export default class CustomerHome extends Component{
                                 variant="raised" 
                                 color="primary"
                                 onClick={()=>{
-                                    window.location.reload();
+                                    firebase.database().ref(`Users/${this.state.user.uid}/cart`).set({}).then(()=>{
+                                        this.notify("Emptied your 🛒");
+                                        window.location.reload();
+                                    })
                                 }}
                             >
                                 <RemoveCart  style={{marginRight: '10px'}}/>
@@ -895,7 +968,7 @@ export default class CustomerHome extends Component{
                                                                         type="number"
                                                                         endAdornment={
                                                                             <InputAdornment position="end">
-                                                                                <IconButton>
+                                                                                <IconButton onClick={()=>{this.addToCart(index, document.getElementById(`pizzaItem-${index}`).value);}}>
                                                                                     <AddShoppingCart />
                                                                                 </IconButton>
                                                                             </InputAdornment >
