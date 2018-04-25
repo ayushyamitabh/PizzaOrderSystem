@@ -18,23 +18,28 @@ import {Avatar,
         InputAdornment,
         InputLabel,
         LinearProgress,
+        MenuList,
         MenuItem,
+        Popover,
         Snackbar,
         TextField,
         Typography} from 'material-ui';
 import * as firebase from 'firebase';
 import * as GoogleMapsLoader from 'google-maps';
-import Close from 'material-ui-icons/Close';
-import Logout from 'material-ui-icons/ExitToApp';
-import RemoveCart from 'material-ui-icons/RemoveShoppingCart';
-import Shop from 'material-ui-icons/Store';
-import AddShoppingCart from 'material-ui-icons/AddShoppingCart';
-import Cart from 'material-ui-icons/ShoppingCart';
-import User from 'material-ui-icons/Face';
-import Details from 'material-ui-icons/LibraryBooks';
-import Comment from 'material-ui-icons/Comment';
 import './CustomerHome.css';
 import axios from 'axios';
+//=================== IMPORTED ICONS =========================
+import User from 'material-ui-icons/Face';
+import Shop from 'material-ui-icons/Store';
+import Close from 'material-ui-icons/Close';
+import Comment from 'material-ui-icons/Comment';
+import Logout from 'material-ui-icons/ExitToApp';
+import Cart from 'material-ui-icons/ShoppingCart';
+import Details from 'material-ui-icons/LibraryBooks';
+import CheckCircle from 'material-ui-icons/CheckCircle';
+import RemoveCart from 'material-ui-icons/RemoveShoppingCart';
+import AddShoppingCart from 'material-ui-icons/AddShoppingCart';
+//=============================================================
 
 export default class CustomerHome extends Component{
     constructor(props){
@@ -73,7 +78,8 @@ export default class CustomerHome extends Component{
                         callBack: ()=>{}
                     }
                 }
-            }
+            },
+            showCart: false
         }
         this.fireBaseListener = null;
         this.authListener = this.authListener.bind(this);
@@ -547,7 +553,8 @@ export default class CustomerHome extends Component{
                     var old = this.state.userData;
                     old.cart.items[pizza.id] = {
                         unitPrice: pizza.cost,
-                        quantity: Number(quantity)
+                        quantity: Number(quantity),
+                        name: pizza.name
                     };
                     old.cart.total += Number(quantity) * old.cart.items[pizza.id].unitPrice;
                     this.setState({
@@ -557,11 +564,13 @@ export default class CustomerHome extends Component{
             } else {
                 var old = this.state.userData;
                 old.cart = {
+                    name: this.state.selectedShop.name,
                     gmap_id: this.state.selectedGMAPID,
                     items: {
                         [pizza.id]: {
                             unitPrice: pizza.cost,
-                            quantity: Number(quantity)
+                            quantity: Number(quantity),
+                            name: pizza.name
                         }
                     },
                     total: Number(quantity) * pizza.cost
@@ -582,6 +591,41 @@ export default class CustomerHome extends Component{
     render() {
         return(
             <div style={{padding:'50px 100px'}}>
+                {/*=============CART POPOVER DIALOG=============*/}
+                {
+                    this.state.showCart?                    
+                    <Popover
+                        open={this.state.showCart}
+                        onClose={()=>{this.setState({showCart:false})}}
+                        anchorEl={document.getElementById('open-cart-btn')}
+                        anchorOrigin={{
+                            vertical:'center',
+                            horizontal:'center'
+                        }}
+                        transformOrigin={{
+                            vertical: 'bottom',
+                            horizontal:'right'
+                        }}
+                    >
+                        <div style={{padding:'15px 30px'}}>
+                            <Typography variant="display1" style={{width:'30vw'}}>Your Cart</Typography>
+                            <Typography variant="subheading">Ordering from {this.state.userData.cart.name}</Typography>
+                            <Divider />
+                            <MenuList role="menu">
+                            {
+                                this.state.userData.cart?
+                                Object.keys(this.state.userData.cart.items).map((key, index)=>{
+                                    return(
+                                        <MenuItem key={`cart-item-${index}`}>
+                                            {this.state.userData.cart.items[key].name}
+                                        </MenuItem>
+                                    );
+                                }):null
+                            }
+                            </MenuList>
+                        </div>
+                    </Popover>:null
+                }
                 {/*=============CART FLOATING BUTTON=============*/}            
                 {
                     this.state.userData.cart?
@@ -590,7 +634,8 @@ export default class CustomerHome extends Component{
                         color="primary" 
                         aria-label="Your Cart" 
                         className="cart-button"
-                        data-aos="fade-left"
+                        id="open-cart-btn"
+                        onClick={()=>{this.setState({showCart:true})}}
                     >
                         <Cart />
                     </Button>
@@ -985,6 +1030,13 @@ export default class CustomerHome extends Component{
                                     }
                                 </CardContent>
                             </Card>:
+                            null
+                        }
+                        {
+                            this.state.userData.cart && this.state.step1complete?
+                            <Button fullWidth variant="raised" color="secondary">
+                                <CheckCircle style={{marginRight:'10px'}} /> Continue to next step
+                            </Button>:
                             null
                         }
                     </div>:

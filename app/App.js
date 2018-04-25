@@ -1,23 +1,70 @@
-import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import React, {Component} from 'react';
+import { StackNavigator, SwitchNavigator } from 'react-navigation';
+import { COLOR, ThemeProvider } from 'react-native-material-ui';
+import Signin from './Components/Signin.js';
+import Signup from './Components/Signup.js';
+import AddShop from './Components/AddShop.js';
+import UserHome from './Components/UserHome.js';
+import AuthLoading from './Components/AuthLoading.js';
 
-export default class App extends React.Component {
-  render() {
-    return (
-      <View style={styles.container}>
-        <Text>Open up App.js to start working on your app!</Text>
-        <Text>Changes you make will automatically reload.</Text>
-        <Text>Shake your phone to open the developer menu.</Text>
-      </View>
+const UserStack = StackNavigator({
+  Home: UserHome
+});
+
+const SigninStack = StackNavigator({
+  SignIn: {
+    screen: Signin,
+    navigationOptions: {
+      title: `Weirdoughs | Sign In`,
+      headerStyle: {
+        backgroundColor: '#c13f3f'
+      },
+      headerTintColor: '#ffffff'
+    }
+  },
+  SignUp: {
+    screen: Signup,
+    navigationOptions: {
+      title: `Weirdoughs | Sign Up`
+    }
+  },
+  AddShop: AddShop
+},
+{
+  initialRouteName: 'SignIn'
+})
+
+const Navigation = SwitchNavigator(
+  {
+    AuthLoading: AuthLoading,
+    Auth: SigninStack,
+    App: UserStack
+  },{
+    initialRouteName: 'AuthLoading'
+  }
+);
+
+const uiTheme = {
+  palette: {
+      primaryColor: COLOR.red500,
+      accentColor: COLOR.blue500
+  },
+  toolbar: {
+      container: {
+          height: 50,
+      },
+  },
+};
+
+export default class App extends Component {
+  constructor(props){
+    super(props);
+  }
+  render(){
+    return(
+      <ThemeProvider uiTheme={uiTheme}>
+      <Navigation />
+      </ThemeProvider>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
