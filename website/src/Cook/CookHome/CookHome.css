@@ -9,3 +9,12 @@
     height: 70px;
     margin-right: 20px;
 }
+.Pizza-creation-content{
+    flex-direction: column;
+    margin: 0 auto;
+    align-items: flex-start;
+}
+
+.push-down{
+    margin-top: 10px !important;
+}

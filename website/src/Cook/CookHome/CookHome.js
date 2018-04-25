@@ -2,12 +2,17 @@ import React, {Component} from 'react';
 import './CookHome.css';
 import * as firebase from 'firebase';
 import {Avatar,
-        AppBar,
         Typography,
-        Toolbar,
+        Card,
+        CardContent,
+        CardHeader,
         Divider,
+        TextField,
         Button} from 'material-ui';
 import Logout from 'material-ui-icons/ExitToApp'
+import GridList, {GridListTile, GridListTileBar} from 'material-ui/GridList';
+import Next from 'material-ui-icons/PlayCircleFilled';
+
 
 class CookHome extends Component {
     constructor(props) {
@@ -15,7 +20,7 @@ class CookHome extends Component {
         this.state = {
             cook: {
                 cookUID: '',
-                cookName: null,
+                cookName: '',
                 profilePicture: null,
                 shopUID: '',
                 pizzaID: '',
@@ -24,11 +29,44 @@ class CookHome extends Component {
                 WarnedCount: '',
                 warned: false,
             },
+            pizza: '',
+            cost: '',
             pizzas: []
+
         };
         this.fireBaseListener = null;
+        this.handlePizzaInput = this.handlePizzaInput.bind(this);
+        this.handleCostInput = this.handleCostInput.bind(this);
         this.authListener = this.authListener.bind(this);
+        this.createPizzaType = this.createPizzaType.bind(this);
 
+    }
+
+    handlePizzaInput(event) {
+        this.setState({
+            pizza: event.target.value
+        });
+    }
+
+    handleCostInput(event) {
+        this.setState({
+            cost: event.target.value
+        });
+    }
+
+
+    createPizzaType() {
+        const pizzasRef = firebase.database().ref().child('Pizzas');
+        pizzasRef.push().set({
+            cook: this.state.cook.cookUID,
+            name: this.state.pizza,
+            cost: this.state.cost,
+            averageRating: 0
+        });
+        this.setState({
+            pizza: '',
+            cost: ''
+        })
     }
 
     componentDidMount() {
@@ -38,35 +76,14 @@ class CookHome extends Component {
     authListener() {
         this.fireBaseListener = firebase.auth().onAuthStateChanged((cook) => {
             if(cook) {
-                console.log(cook);
                 this.setState({
                     cook: {
                         cookName: cook.displayName,
-                        profilePicture: cook.photoURL
+                        profilePicture: cook.photoURL,
+                        cookUID: cook.uid
                     }
                 })
             }
-        });
-        const rootRef = firebase.database().ref().child('Pizzas');
-        var pizzaRef = rootRef.child('pizzaID3').set({
-            name: 'Pepperoni Pizza',
-            cost: 12.99
-        });
-        pizzaRef = rootRef.child('pizzaID4').set({
-            name:'Bacon Pizza',
-            cost: 14.99
-        });
-        pizzaRef = rootRef.child('pizzaID5').set({
-            name:'Mushrooms and Onions Pizza',
-            cost: 10.99
-        });
-        pizzaRef = rootRef.child('pizzaID6').set({
-            name:'Sausage Pizza',
-            cost: 13.99
-        });
-        pizzaRef = rootRef.child('pizzaID7').set({
-            name:'Black Olives Pizza',
-            cost: 10.99
         });
     }
 
@@ -77,7 +94,7 @@ class CookHome extends Component {
 
     render() {
         return (
-            <div style={{padding:'50px 100px'}}>
+            <div style={{padding:'50px 200px'}}>
                 <div className="cook-header">
                     <Avatar className="cook-avatar"
                         src={this.state.cook.profilePicture} />
@@ -89,10 +106,44 @@ class CookHome extends Component {
                         </Typography>
                 </div>
                 <Divider />
-                <div>
+                <Typography variant="subheading" style={{margin: '10px'}}>
+                    <div className="Pizza-creation-content">
+                        <Card style={{marginTop: '10px'}} data-aos="slide-up">
+                            <CardHeader title="Pizzas" subheader="Enter the pizza to add into the menu"/>
+                            <CardContent>
+                                <TextField
+                                    onChange={this.handlePizzaInput}
+                                    id="pizza"
+                                    label="Pizza Type"
+                                    required
+                                    value={this.state.pizza}
+                                    vullwidth
+                                    className="push-down"
+                                />
+                                <TextField
+                                    onChange={this.handleCostInput}
+                                    id="cost"
+                                    label="Cost"
+                                    required
+                                    value={this.state.cost}
+                                    fullwidth
+                                    className="push-down"
+                                />
+                                <Button
+                                    onClick={this.createPizzaType}
+                                    fullwidth
+                                    variant="raised"
+                                    color="primary"
+                                    className="push-down"
+                                >
+                                <Next style={{marginRight: '10px'}} />
+                                Add to Menu
+                                </Button>
+                            </CardContent>
+                            </Card>
+                    </div>
+                </Typography>
 
-
-                </div>
             </div>
         );
     }
