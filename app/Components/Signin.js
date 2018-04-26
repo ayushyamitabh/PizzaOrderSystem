@@ -1,14 +1,16 @@
 import React, {Component} from 'react';
-import {Dimensions,
+import {ActivityIndicator,
+        Dimensions,
         Image,
         ScrollView,
         StyleSheet,
         Text,
         View} from 'react-native';
+import * as firebase from 'firebase';
 import Logo from '../Resources/logo.png';
-import {Button, Card, Divider} from 'react-native-material-ui';
 import * as Animatable from 'react-native-animatable';
 import { TextField } from 'react-native-material-textfield';
+import {Button, Card, Divider, Snackbar} from 'react-native-material-ui';
 const styles = StyleSheet.create({
     container :{
         flexGrow:1,
@@ -43,12 +45,46 @@ export default class Signin extends Component{
         super(props);
         this.state={
             username:'',
-            password:''
+            password:'',
+            loading: false,
+            notify:false,
+            notifyMsg:''
         }
+        this.login = this.login.bind(this);
+    }
+    login(){
+        this.setState({
+            loading:true,
+        })
+        firebase.auth().signInWithEmailAndPassword(this.state.username, this.state.password).then(()=>{
+            this.setState({
+                notify:true,
+                notifyMsg:'loggedin'
+            })
+            setTimeout(()=>{
+                this.setState({
+                    loading:false,
+                    notify:false,
+                    notifyMsg:''
+                })
+            },2000);
+        }).catch((err)=>{
+            this.setState({
+                notify:true,
+                notifyMsg:err.message
+            })
+            setTimeout(()=>{
+                this.setState({
+                    loading:false,
+                    notify:false,
+                    notifyMsg:''
+                })
+            },2000);
+        })
     }
     render() {
         return (
-            <ScrollView style={{flex:1}} contentContainerStyle={styles.container} scrollEnabled={true}>
+            <ScrollView style={{height:Dimensions.get('window').height}} contentContainerStyle={styles.container} scrollEnabled={true}>
                 <Animatable.View animation="fadeInUp">
                     <Image resizeMode="contain" style={styles.logo} source={Logo} />
                     <Text style={styles.title}>Weirdoughs Pizza</Text>
@@ -56,32 +92,52 @@ export default class Signin extends Component{
                         Pizza - quick and easy.
                     </Text>
                 </Animatable.View>
+                {
+                    this.state.loading?
+                    <Animatable.View animation="fadeIn">
+                        <ActivityIndicator size="large" color="#00f0ff"/>
+                        {
+                            this.state.notify?
+                            <Text style={styles.cardSubheader}>{this.state.notifyMsg}</Text>:
+                            null
+                        }
+                    </Animatable.View>:
+                    null
+                }
                 <Animatable.View animation="fadeInUp" style={styles.cardContainer}>
                     <Card style={{container:styles.card}}>
                         <Text style={styles.cardTitle}>Sign In</Text>
                         <Text style={styles.cardSubheader}>Customers, Cooks, Deliverers & Managers</Text>
                         <Divider />
                         <TextField 
+                            ref="username"
                             label="Username"
                             value={this.state.username}
                             onChangeText = { (changedText)=>{this.setState({username:changedText})}}
+                            editable={!this.state.loading}
+                            onBlur={()=>{this.refs.password.focus();}}                            
                         />
                         <TextField
+                            ref="password"
                             label="Password"
                             value={this.state.password}
                             onChangeText = { (changedText)=>{this.setState({password:changedText})}}
                             secureTextEntry={true}
+                            editable={!this.state.loading}
                         />
                         <Button 
+                            onPress={this.login}
                             raised
                             primary
                             text="Sign In"
+                            disabled={this.state.loading}
                         />
                         <Text style={[styles.cardSubheader, {paddingTop: 10,paddingBottom: 10}]}>Don't have an account? Sign Up!</Text>
                         <Button 
                             raised
                             accent
                             text="Sign Up"
+                            disabled={this.state.loading}
                         />
                     </Card>
                 </Animatable.View>

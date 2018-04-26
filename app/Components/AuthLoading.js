@@ -23,15 +23,24 @@ const styles = StyleSheet.create({
 export default class AuthLoading extends Component {
     constructor(props){
         super(props);
-        if(firebase.auth().currentUser){
-            setTimeout(()=>{
+        this.firebaseListener = null;
+        this.authListener = this.authListener.bind(this);
+    }
+    componentDidMount(){
+        this.authListener();
+    }
+    authListener(){
+        this.firebaseListener = firebase.auth().onAuthStateChanged((user)=>{
+            if(user){
                 this.props.navigation.navigate('App');
-            },2000);
-        } else {
-            setTimeout(()=>{
+            } else {
                 this.props.navigation.navigate('Auth');
-            },2000);
-        }
+            }
+        })
+    }
+    componentWillUnmount(){
+        this.fireBaseListener && this.fireBaseListener();
+        this.authListener = undefined;
     }
     render(){
         return(

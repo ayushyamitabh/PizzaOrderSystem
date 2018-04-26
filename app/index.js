@@ -1,4 +1,4 @@
-import { AppRegistry } from 'react-native';
+import { AppRegistry, YellowBox, UIManager } from 'react-native';
 import * as firebase from 'firebase';
 import App from './App';
 
@@ -13,3 +13,6 @@ var config = {
   firebase.initializeApp(config);
 
 AppRegistry.registerComponent('app', () => App);
+YellowBox.ignoreWarnings(['Warning: isMounted(...) is deprecated', 'Module RCTImageLoader']);
+console.ignoredYellowBox = ['Setting a timer'];
+UIManager.setLayoutAnimationEnabledExperimental && UIManager.setLayoutAnimationEnabledExperimental(true);
