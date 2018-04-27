@@ -8,14 +8,14 @@ Group project for **CSC 322 @ CCNY** for Professor Jie Wei
 3. Gerry Xu
 4. Tobias He
 
-Reach us at tagmhaxt@gmail.com 
+Reach us at tagmhaxt@gmail.com
 
 ----
 #### Project Documentation:
 
 1. [Phase 1 Report - Software Requirements & Description](https://github.com/ayushyamitabh/PizzaOrderSystem/blob/master/documentation/Weirdoughs%20Phase%201%20Report.pdf)
 
-2. [Phase 2 Report - Software Requirements Specifications](https://github.com/ayushyamitabh/PizzaOrderSystem/blob/master/documentation/Weirdoughs%20Phase%202%20Report.pdf)
+2. [Phase 2 Report - Design Report](https://github.com/ayushyamitabh/PizzaOrderSystem/blob/master/documentation/Weirdoughs%20Phase%202%20Report.pdf)
 
 
 3. [Progress Chart](https://docs.google.com/spreadsheets/d/1uGcj45iaUilKQ4BIbSX6dWoCYEBxp1VJSPkyjYHKs4k/edit?usp=sharing)
@@ -36,7 +36,7 @@ Reach us at tagmhaxt@gmail.com
 2. Material-UI (UI components) | [Documentation](https://material-ui-next.com/)
 3. ReactJS (JS Framework) | [Documentation](https://reactjs.org/)
 4. Google Maps Wrapper | [GitHub](https://github.com/Carrooi/Js-GoogleMapsLoader)
-5. Google Maps & Places API | [Documentation](https://developers.google.com/maps) | [Login](https://console.developers.google.com/apis) 
+5. Google Maps & Places API | [Documentation](https://developers.google.com/maps) | [Login](https://console.developers.google.com/apis)
 6. AOS (Animation Provider) | [GitHub](https://github.com/michalsnik/aos)
 7. React Router | [Documentation](https://reacttraining.com/react-router/web/guides/basic-components)
 8. History | [GitHub](https://github.com/ReactTraining/history)
@@ -58,7 +58,7 @@ Make sure to have Node.JS and NPM installed. Download [here](https://nodejs.org/
 $ git clone https://github.com/ayushyamitabh/PizzaOrderSystem.git && cd PizzaOrderSystem
 ``
 
-2. To install all dependencies 
+2. To install all dependencies
 
 ``
  $ npm install
