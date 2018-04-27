@@ -49,9 +49,12 @@ class CookHome extends Component {
     }
 
     handleCostInput(event) {
-        this.setState({
-            cost: event.target.value
-        });
+        const number = /^[0-9\.\-\/]+$/;
+        if(event.target.value == '' || number.test(event.target.value)) {
+            this.setState({
+                cost: event.target.value
+            });
+        }
     }
 
 
@@ -101,7 +104,7 @@ class CookHome extends Component {
                         <Typography variant="display2" style={{flex:1}}>
                             Welcome, {this.state.cook.cookName}
                             <Button style={{float:'right'}} onClick={()=>{firebase.auth().signOut()}}>
-                            <Logout style ={{marginRight: '5px'}}/> Logout
+                            <Logout style ={{marginRight: '5px'}}/> Signout
                             </Button>
                         </Typography>
                 </div>
