@@ -162,8 +162,8 @@ class DeliveryHome extends Component{
     }
     
     updateCustomer(index){      
-        const cuid = this.state.userData.orders[index].cuid;
-        firebase.database().ref(`Users/${cuid}`).once('value').then ((snap) =>{
+        const uid = this.state.userData.orders[index].uid;
+        firebase.database().ref(`Users/${uid}`).once('value').then ((snap) =>{
             if(snap.val()){
                 var customerData = snap.val();
                 var a = customerData.averageRating * customerData.ratingCount;
@@ -171,7 +171,7 @@ class DeliveryHome extends Component{
                 var c = b / (customerData.ratingCount +1);
                 customerData.averageRating = c;
                 customerData.ratingCount +=1;
-                firebase.database().ref(`Users/$(cuid)`).set(customerData).then (()=>{           firebase.database().ref(`Orders/${this.state.userData.orderList[index]}`).set(this.state.userData.orders[index]).then(()=>{
+                firebase.database().ref(`Users/$(uid)`).set(customerData).then (()=>{           firebase.database().ref(`Orders/${this.state.userData.orderList[index]}`).set(this.state.userData.orders[index]).then(()=>{
                         this.setState({
                             processing:false                
                         })
@@ -350,44 +350,9 @@ class DeliveryHome extends Component{
                                     {this.state.userData.orders[this.state.selectedIndex].customerRating} <span role="img" aria-label="star">⭐</span>
                                     </strong>
                                 </Typography>
+
                             }
-                            {
-                                Object.keys(this.state.userData.orders[this.state.selectedIndex].pizzaRatings).map((key, index)=>{
-                                    var pizza = this.state.userData.orders[this.state.selectedIndex].pizzaRatings[key];
-                                    if (pizza.rating === 0){
-                                        return(
-                                            <TextField 
-                                                disabled={this.state.processing}
-                                                className="push-down"
-                                                key={`pizza${index}`}
-                                                select
-                                                fullWidth
-                                                label={`Rate ${pizza.name}`}
-                                                value={pizza.rating}
-                                                onChange={(e)=>{
-                                                    var old = this.state.userData;
-                                                    old.orders[this.state.selectedIndex].pizzaRatings[key].rating = e.target.value;
-                                                    this.setState({
-                                                        userData: old,
-                                                        processing: true
-                                                    })
-                                                    if (e.target.value !== 0) this.updatePizza(this.state.selectedIndex, key);
-                                                    else this.setState({processing:false});
-                                                }}
-                                            >
-                                                <MenuItem value={0}><i>Choose a rating</i></MenuItem>
-                                                <MenuItem value={5}><span role="img" aria-label="star">⭐⭐⭐⭐⭐(5) </span></MenuItem>
-                                                <MenuItem value={4}><span role="img" aria-label="star">⭐⭐⭐⭐(4) </span></MenuItem>
-                                                <MenuItem value={3}><span role="img" aria-label="star">⭐⭐⭐(3) </span></MenuItem>
-                                                <MenuItem value={2}><span role="img" aria-label="star">⭐⭐(2) </span></MenuItem>
-                                                <MenuItem value={1}><span role="img" aria-label="star">⭐(1) </span></MenuItem>
-                                            </TextField>
-                                        );
-                                    } else {
-                                        
-                                    }
-                                })
-                            }
+                         
                         </DialogContent>
                     </div>:
                     <div></div>
