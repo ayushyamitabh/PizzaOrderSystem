@@ -66,6 +66,7 @@ class DeliveryHome extends Component{
             notifyMessage: '',
             step1complete: false,
             selectedShop: null,
+            busy: false,
             
         };
         this.fireBaseListener = null;
@@ -200,7 +201,7 @@ class DeliveryHome extends Component{
         maxWidth: 345,
         border: '5px solid black',      
 };
-        
+                         {/*=============DELIVERER HOME PAGE=============*/}
         return ( 
             <div style={{padding:'50px 100px'}}>
                 <div className="signup-page"> 
@@ -231,7 +232,9 @@ class DeliveryHome extends Component{
                         </Typography>
                     <Divider style ={{marginTop:'10px'}}/>
                 </div>
-           
+
+                            {/*=============PAST ORDERS=============*/}
+
             <div className="past-orders" data-aos="fade-up">
                 {
                     this.state.userData.orders?
@@ -357,7 +360,28 @@ class DeliveryHome extends Component{
                     </div>:
                     <div></div>
                 }
-                </Dialog>
+                </Dialog>   
+
+                 {/*=============CURRENT ORDERS=============*/}
+
+                <div className="signup-page" style={{marginLeft:'200px'}}> 
+                    <div className="customer-header" data-aos = "fade-up">
+                        <Typography variant="display2">
+                            Your Current Orders  
+                        </Typography>
+                        
+                    <Divider />
+                    </div>
+                </div>
+
+                <div>
+                    
+                </div>
+
+
+
+
+
                 <div className="column" data-aos ="flip-up"> 
                     <Card  data-aos ="flip-up" style ={cardDescription} >
                         <CardContent>
