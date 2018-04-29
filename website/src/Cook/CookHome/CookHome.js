@@ -8,10 +8,12 @@ import {Avatar,
         CardHeader,
         Divider,
         TextField,
+        Snackbar,
         Button} from 'material-ui';
 import Logout from 'material-ui-icons/ExitToApp'
-import GridList, {GridListTile, GridListTileBar} from 'material-ui/GridList';
+//import GridList, {GridListTile, GridListTileBar} from 'material-ui/GridList';
 import Next from 'material-ui-icons/PlayCircleFilled';
+import FileUpload from 'material-ui-icons/CloudUpload';
 
 
 class CookHome extends Component {
@@ -29,9 +31,12 @@ class CookHome extends Component {
                 WarnedCount: '',
                 warned: false,
             },
+            pizzaImg: '',
             pizza: '',
             cost: '',
-            pizzas: []
+            pizzas: [],
+            notifyMsg: '',
+            notify: false
 
         };
         this.fireBaseListener = null;
@@ -39,7 +44,6 @@ class CookHome extends Component {
         this.handleCostInput = this.handleCostInput.bind(this);
         this.authListener = this.authListener.bind(this);
         this.createPizzaType = this.createPizzaType.bind(this);
-
     }
 
     handlePizzaInput(event) {
@@ -50,26 +54,69 @@ class CookHome extends Component {
 
     handleCostInput(event) {
         const number = /^[0-9\.\-\/]+$/;
-        if(event.target.value == '' || number.test(event.target.value)) {
+        if(event.target.value === '' || number.test(event.target.value)) {
             this.setState({
                 cost: event.target.value
             });
         }
     }
 
-
     createPizzaType() {
-        const pizzasRef = firebase.database().ref().child('Pizzas');
-        pizzasRef.push().set({
-            cook: this.state.cook.cookUID,
-            name: this.state.pizza,
-            cost: this.state.cost,
-            averageRating: 0
-        });
-        this.setState({
-            pizza: '',
-            cost: ''
-        })
+        if (this.state.pizza === '' && this.state.cost === '') {
+            this.setState({
+                notify: true,
+                notifyMsg: "Please enter the 🍕 topping and price."
+            })
+        }
+        else if (this.state.cost === '') {
+            this.setState({
+                notify: true,
+                notifyMsg: "You didn't set the price of the 🍕."
+            })
+        }
+        else if (this.state.pizza === '') {
+            this.setState({
+                notify: true,
+                notifyMsg: "You didn't enter in the 🍕 topping yet."
+            })
+        }
+        else {
+            var pizzaPicture = document.getElementById("pizzaPicture").files[0];
+            var pizzaStorageRef = firebase.storage().ref().child('Pizzas/' + pizzaPicture.name).put(pizzaPicture).then(() =>{
+                firebase.storage().ref().child('Pizzas/' + pizzaPicture.name).getDownloadURL().then((url) => {
+                    this.setState({
+                        pizzaImg: url
+                    })
+                    var pizzasRef = firebase.database().ref().child('Pizzas/total').once('value').then((snap)=> {
+                        var current = snap.val();
+                        var newID ='pizzaID' + current;
+                        firebase.database().ref(`Pizzas/${newID}`).set({
+                            cook: this.state.cook.cookUID,
+                            name: this.state.pizza,
+                            cost: this.state.cost,
+                            image: url,
+                            averageRating: 0,
+                            totalOrders: 0
+                        }).then(()=>{
+                            firebase.database().ref('Pizzas/total').set(current+1);
+                            this.setState({
+                                pizza: '',
+                                cost: ''
+                            })
+                        });
+                    });
+                    this.setState({
+                        notify: true,
+                        notifyMsg: "Your 🍕 type has been added to the menu!"
+                    })
+                });
+            })
+        }
+
+    }
+
+    displayPizza() {
+
     }
 
     componentDidMount() {
@@ -112,26 +159,35 @@ class CookHome extends Component {
                 <Typography variant="subheading" style={{margin: '10px'}}>
                     <div className="Pizza-creation-content">
                         <Card style={{marginTop: '10px'}} data-aos="slide-up">
-                            <CardHeader title="Pizzas" subheader="Enter the pizza to add into the menu"/>
+                            <CardHeader title="Create Your Pizzas" subheader="Enter the pizza topping to add into the menu"/>
                             <CardContent>
                                 <TextField
                                     onChange={this.handlePizzaInput}
                                     id="pizza"
-                                    label="Pizza Type"
+                                    label="Pizza Topping"
                                     required
                                     value={this.state.pizza}
-                                    vullwidth
+                                    fullwidth
                                     className="push-down"
                                 />
                                 <TextField
                                     onChange={this.handleCostInput}
-                                    id="cost"
-                                    label="Cost"
+                                    id="price"
+                                    label="Price"
                                     required
                                     value={this.state.cost}
                                     fullwidth
                                     className="push-down"
                                 />
+                                <input id="pizzaPicture" type="file" accept="image/*" onChange={this.handleFileSelect} style={{display:'none'}} />
+                                <Button
+                                    onClick={()=>{document.getElementById("pizzaPicture").click()}}
+                                    fullwidth
+                                    variant="raised"
+                                    color="secondary" >
+                                    <FileUpload style={{marginRight:'10px'}} />
+                                    Upload Pizza Picture
+                                </Button>
                                 <Button
                                     onClick={this.createPizzaType}
                                     fullwidth
@@ -146,7 +202,12 @@ class CookHome extends Component {
                             </Card>
                     </div>
                 </Typography>
-
+                <Snackbar
+                    onClose={() => {this.setState({notify:false, notifyMsg: ''})}}
+                    open={this.state.notify}
+                    message={this.state.notifyMsg}
+                    autoHideDuration={2000}
+                />
             </div>
         );
     }
