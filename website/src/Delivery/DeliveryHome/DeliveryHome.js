@@ -158,7 +158,7 @@ class DeliveryHome extends Component{
                 <div className="signup-page"> 
                     <div className="delivererSection">
                         <Typography variant="display2">
-                            Welcome, {this.state.user.displayName}
+                            Welcome, {this.state.user.displayName}  
                             
                         </Typography>
             
