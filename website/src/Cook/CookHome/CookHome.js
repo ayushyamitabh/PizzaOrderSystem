@@ -6,12 +6,14 @@ import {Avatar,
         Card,
         CardContent,
         CardHeader,
+        CardMedia,
         Divider,
         TextField,
         Snackbar,
         Button} from 'material-ui';
-import Logout from 'material-ui-icons/ExitToApp'
-//import GridList, {GridListTile, GridListTileBar} from 'material-ui/GridList';
+import GridList, { GridListTile, GridListTileBar } from 'material-ui/GridList';
+import Subheader from 'material-ui/List/ListSubheader';
+import Logout from 'material-ui-icons/ExitToApp';
 import Next from 'material-ui-icons/PlayCircleFilled';
 import FileUpload from 'material-ui-icons/CloudUpload';
 
@@ -23,7 +25,7 @@ class CookHome extends Component {
             cook: {
                 cookUID: '',
                 cookName: '',
-                profilePicture: null,
+                profilePicture: '',
                 shopUID: '',
                 pizzaID: '',
                 averageRating: '',
@@ -36,7 +38,8 @@ class CookHome extends Component {
             cost: '',
             pizzas: [],
             notifyMsg: '',
-            notify: false
+            notify: false,
+            processing: false
 
         };
         this.fireBaseListener = null;
@@ -44,6 +47,8 @@ class CookHome extends Component {
         this.handleCostInput = this.handleCostInput.bind(this);
         this.authListener = this.authListener.bind(this);
         this.createPizzaType = this.createPizzaType.bind(this);
+        this.handleFileSelect = this.handleFileSelect.bind(this);
+        this.retrievePizza = this.retrievePizza.bind(this);
     }
 
     handlePizzaInput(event) {
@@ -60,24 +65,35 @@ class CookHome extends Component {
             });
         }
     }
+    handleFileSelect(event) {
+        this.setState({
+            pizzaImg: event.target.files[0]
+        })
+    }
 
     createPizzaType() {
-        if (this.state.pizza === '' && this.state.cost === '') {
+        if (this.state.pizza === '' && this.state.cost === '' && this.state.pizzaImg === '') {
             this.setState({
                 notify: true,
-                notifyMsg: "Please enter the 🍕 topping and price."
+                notifyMsg: "Please enter the 🍕 topping, price and upload a picture of the 🍕."
             })
         }
         else if (this.state.cost === '') {
             this.setState({
                 notify: true,
-                notifyMsg: "You didn't set the price of the 🍕."
+                notifyMsg: "You didn't set the price of the 🍕 yet."
             })
         }
         else if (this.state.pizza === '') {
             this.setState({
                 notify: true,
                 notifyMsg: "You didn't enter in the 🍕 topping yet."
+            })
+        }
+        else if(this.state.pizzaImg === '') {
+            this.setState({
+                notify: true,
+                notifyMsg: "You didn't upload a picture of your 🍕 topping yet."
             })
         }
         else {
@@ -115,8 +131,19 @@ class CookHome extends Component {
 
     }
 
-    displayPizza() {
-
+    retrievePizza() {
+        const previousPizza = this.state.pizzas;
+        var pizzaRef = firebase.database().ref().child(`Pizzas`).on("child_added", (snapshot) =>{
+            previousPizza.push({
+                name: snapshot.val().name,
+                image: snapshot.val().image,
+                cost: snapshot.val().cost,
+                averageRating: snapshot.val().averageRating
+            })
+            this.setState({
+                pizzas: previousPizza
+            })
+        });
     }
 
     componentDidMount() {
@@ -135,6 +162,7 @@ class CookHome extends Component {
                 })
             }
         });
+        this.retrievePizza();
     }
 
     componentWillUnmount() {
@@ -159,7 +187,7 @@ class CookHome extends Component {
                 <Typography variant="subheading" style={{margin: '10px'}}>
                     <div className="Pizza-creation-content">
                         <Card style={{marginTop: '10px'}} data-aos="slide-up">
-                            <CardHeader title="Create Your Pizzas" subheader="Enter the pizza topping to add into the menu"/>
+                            <CardHeader title="Create Your Pizzas" subheader="Enter the pizza topping and price to add to the menu"/>
                             <CardContent>
                                 <TextField
                                     onChange={this.handlePizzaInput}
@@ -167,7 +195,7 @@ class CookHome extends Component {
                                     label="Pizza Topping"
                                     required
                                     value={this.state.pizza}
-                                    fullwidth
+                                    fullWidth
                                     className="push-down"
                                 />
                                 <TextField
@@ -176,24 +204,24 @@ class CookHome extends Component {
                                     label="Price"
                                     required
                                     value={this.state.cost}
-                                    fullwidth
+                                    fullWidth
                                     className="push-down"
                                 />
                                 <input id="pizzaPicture" type="file" accept="image/*" onChange={this.handleFileSelect} style={{display:'none'}} />
                                 <Button
                                     onClick={()=>{document.getElementById("pizzaPicture").click()}}
-                                    fullwidth
+                                    fullWidth
                                     variant="raised"
+                                    className="push-down"
                                     color="secondary" >
                                     <FileUpload style={{marginRight:'10px'}} />
                                     Upload Pizza Picture
                                 </Button>
                                 <Button
                                     onClick={this.createPizzaType}
-                                    fullwidth
+                                    fullWidth
                                     variant="raised"
                                     color="primary"
-                                    className="push-down"
                                 >
                                 <Next style={{marginRight: '10px'}} />
                                 Add to Menu
@@ -202,7 +230,26 @@ class CookHome extends Component {
                             </Card>
                     </div>
                 </Typography>
-                <Snackbar
+                <Divider />
+                    <div style={{marginTop: '10px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around', overflow: 'hidden', backgroundColor: '#FFFFFF'}}>
+                        <Subheader style={{fontSize: "20px", color: 'black'}}>Pizza Toppings</Subheader>
+                            <GridList style={{flexWrap: 'nowrap'}} cols={3} cellHeight={180} data-aos ="fade-up">
+                                {
+                                    this.state.pizzas.map((data,index) =>{
+                                        return (
+                                        <GridListTile key={index}>
+                                            <img src={data.image} alt={data.name} />
+                                            <GridListTileBar
+                                                title={data.name}
+                                                subtitle={`${data.averageRating} ⭐ | $${data.cost}`}
+                                                />
+                                        </GridListTile>
+                                    );
+                                })
+                            }
+                        </GridList>
+                    </div>
+                    <Snackbar
                     onClose={() => {this.setState({notify:false, notifyMsg: ''})}}
                     open={this.state.notify}
                     message={this.state.notifyMsg}
