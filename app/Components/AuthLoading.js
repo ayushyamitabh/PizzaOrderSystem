@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import {ActivityIndicator, Dimensions, Image, StyleSheet, Text, View} from 'react-native';
 import Logo from '../Resources/logo.png';
 import * as firebase from 'firebase';
+import Snackbar from 'react-native-snackbar';
 
 const styles = StyleSheet.create({
     container: {
@@ -32,7 +33,17 @@ export default class AuthLoading extends Component {
     authListener(){
         this.firebaseListener = firebase.auth().onAuthStateChanged((user)=>{
             if(user){
-                this.props.navigation.navigate('App');
+                firebase.database().ref(`Users/${user.uid}/type`).once('value').then((snap)=>{
+                    if (snap.val() === 'customer'){
+                        Snackbar.show({
+                            title: 'Welcome back!',
+                            duration: Snackbar.LENGTH_SHORT
+                        })
+                        this.props.navigation.navigate('App');
+                    } else {
+                        firebase.auth().signOut();
+                    }
+                })
             } else {
                 this.props.navigation.navigate('Auth');
             }

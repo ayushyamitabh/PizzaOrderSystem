@@ -8,9 +8,10 @@ import {ActivityIndicator,
         View} from 'react-native';
 import * as firebase from 'firebase';
 import Logo from '../Resources/logo.png';
+import Snackbar from 'react-native-snackbar';
 import * as Animatable from 'react-native-animatable';
 import { TextField } from 'react-native-material-textfield';
-import {Button, Card, Divider, Snackbar} from 'react-native-material-ui';
+import {Button, Card, Divider} from 'react-native-material-ui';
 const styles = StyleSheet.create({
     container :{
         flexGrow:1,
@@ -47,8 +48,6 @@ export default class Signin extends Component{
             username:'',
             password:'',
             loading: false,
-            notify:false,
-            notifyMsg:''
         }
         this.login = this.login.bind(this);
     }
@@ -56,30 +55,22 @@ export default class Signin extends Component{
         this.setState({
             loading:true,
         })
+        Snackbar.show({
+            title: 'Signing in...',
+            duration: Snackbar.LENGTH_SHORT
+        })
         firebase.auth().signInWithEmailAndPassword(this.state.username, this.state.password).then(()=>{
             this.setState({
-                notify:true,
-                notifyMsg:'loggedin'
+                loading:false
             })
-            setTimeout(()=>{
-                this.setState({
-                    loading:false,
-                    notify:false,
-                    notifyMsg:''
-                })
-            },2000);
         }).catch((err)=>{
-            this.setState({
-                notify:true,
-                notifyMsg:err.message
+            Snackbar.show({
+                title: err.message,
+                duration: Snackbar.LENGTH_LONG
             })
-            setTimeout(()=>{
-                this.setState({
-                    loading:false,
-                    notify:false,
-                    notifyMsg:''
-                })
-            },2000);
+            this.setState({
+                loading:false
+            })
         })
     }
     render() {
@@ -96,11 +87,6 @@ export default class Signin extends Component{
                     this.state.loading?
                     <Animatable.View animation="fadeIn">
                         <ActivityIndicator size="large" color="#00f0ff"/>
-                        {
-                            this.state.notify?
-                            <Text style={styles.cardSubheader}>{this.state.notifyMsg}</Text>:
-                            null
-                        }
                     </Animatable.View>:
                     null
                 }
