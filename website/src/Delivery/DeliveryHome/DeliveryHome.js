@@ -127,34 +127,34 @@ class DeliveryHome extends Component{
                
               
                
-                    // if (snap.val()){
-                    //         axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/getUserOrderData',{orders: snap.val().orders})
-                    //         .then((result)=>{
-                    //             if (result.data.orderData.length >= 1){
-                    //                 const old = this.state.userData;
-                    //                 old['orders'] = result.data.orderData;
-                    //                 old['ordersMessage'] = '';
-                    //                 old['ordersLoading'] = false;
-                    //                 this.setState({
-                    //                     userData : old
-                    //                 });
-                    //             } else {
-                    //                 const old = this.state.userData;
-                    //                 old['ordersLoading'] = false;
-                    //                 old['ordersMessage'] = "You don't have any orders yet.";
-                    //                 this.setState({
-                    //                     userData: old
-                    //                 })
-                    //             }
-                    //         }).catch((error)=>{
-                    //             var old = this.state.userData;
-                    //             old['ordersLoading'] = false;
-                    //             old['ordersMesage'] = "Couldn't get your orders 😟";
-                    //             this.setState({
-                    //                 userData: old                               
-                    //             })
-                    //         })
-                    //     }
+                    if (snap.val()){
+                            axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/getUserOrderData',{orders: snap.val().orders})
+                            .then((result)=>{
+                                if (result.data.orderData.length >= 1){
+                                    const old = this.state.userData;
+                                    old['orders'] = result.data.orderData;
+                                    old['ordersMessage'] = '';
+                                    old['ordersLoading'] = false;
+                                    this.setState({
+                                        userData : old
+                                    });
+                                } else {
+                                    const old = this.state.userData;
+                                    old['ordersLoading'] = false;
+                                    old['ordersMessage'] = "You don't have any orders yet.";
+                                    this.setState({
+                                        userData: old
+                                    })
+                                }
+                            }).catch((error)=>{
+                                var old = this.state.userData;
+                                old['ordersLoading'] = false;
+                                old['ordersMesage'] = "Couldn't get your orders 😟";
+                                this.setState({
+                                    userData: old                               
+                                })
+                            })
+                        }
                    
                })
             }
@@ -171,7 +171,7 @@ class DeliveryHome extends Component{
                 var c = b / (customerData.ratingCount +1);
                 customerData.averageRating = c;
                 customerData.ratingCount +=1;
-                firebase.database().ref(`Users/$(uid)`).set(customerData).then (()=>{firebase.database().ref(`Orders/${this.state.userData.orderList[index]}`).set(this.state.userData.orders[index]).then(()=>{
+                firebase.database().ref(`Users/$(uid)`).set(customerData).then (()=>{           firebase.database().ref(`Orders/${this.state.userData.orderList[index]}`).set(this.state.userData.orders[index]).then(()=>{
                         this.setState({
                             processing:false                
                         })
@@ -219,7 +219,7 @@ class DeliveryHome extends Component{
                     </div>
                 </div>
 
-          {/* past order section */}
+          
             
                 <div style={{marginTop:'25px',textAlign:'center'}}>
                         <Typography variant="display1" className="push-down" color ="inherit" data-aos ="fade-up">
@@ -233,23 +233,131 @@ class DeliveryHome extends Component{
                 </div>
            
             <div className="past-orders" data-aos="fade-up">
+                {
+                    this.state.userData.orders?
+                        this.state.userData.orders.map((data,index)=>{
+                            console.log(this.state.userData);
+                            return(
+                                <Card key={index} data-aos="fade-left" className="order-card">
+                                    <CardHeader 
+                                        title={data.shopName}
+                                        style={{paddingBottom: 0}}/>
+                                           
+                                        <CardContent style={{paddingBottom:0, paddingTop: 0}}>
+                                            {
+                                          
+                                                data.customerRating === 0 ? 
+                                                    <Typography variant="subheading" style={{color:'red'}}>
+                                                        <i> Customer not rated yet</i>
+                                                    
+                                                    </Typography>:
 
-            
+      
+                                                    <Typography variant="subheading">
+                                                        Customer Rating: <strong>{data.customerRating} <span role="img" aria-label="star">⭐</span></strong>
+                                                    </Typography>
+                                            }
+                                                    <Typography variant="subheading" style={{fontSize:'10.5px'}}>
+                                                        <i>See details to rate customers.</i>
+                                                    </Typography>
+
+                                                    <Divider />
+                                                            
+                                        </CardContent>
+
+                                                <CardActions>
+                                                    <Button 
+                                                        fullWidth
+                                                        onClick={()=>{this.showDetails(index)}} 
+                                                        color="primary" 
+                                                        size="small">
+                                                        <Details style={{marginRight:'10px'}} />
+                                                        See details
+                                                    </Button>
+                                                </CardActions>
+                                            </Card>
+                                );
+                            })
+                    :
+                     <Typography variant="subheading" className="no-orders">{this.state.userData.ordersMesage}
+                     </Typography>
+                }
+      
+                
             </div>
-               
-{/*=============CURRENT ORDERS=============*/}
 
-                <div className="signup-page" style={{marginTop:'25px',textAlign:'center'}}> 
-                   
-                        <Typography className="push-down" color ="inherit" variant="display2">
-                            Your Current Orders  
-                        </Typography>
-                        
-                    <Divider />
-                    
-                </div>
+            <Divider />
+            <Dialog 
+                    onClose={()=>{this.hideDetails(false)}} 
+                    open={this.state.showDetails} 
+                    disableBackdropClick={true} 
+                    disableEscapeKeyDown={true}
+                >
+                {
+                    this.state.showDetails ?
+                    <div>                        
+                    {
+                        this.state.processing?
+                        <LinearProgress />:null
+                    }
+                        <DialogTitle
+                            children={
+                                <span>
+                                    <span style={{paddingRight:'200px'}}>{`Order from ${this.state.userData.orders[this.state.selectedIndex].shopName}`}</span>
+                                    {this.state.processing===false?<IconButton onClick={()=>{this.hideDetails()}}><Close /></IconButton>:null}
+                                </span>
+                            }
+                        ></DialogTitle>
+                        <DialogContent>
+                            <DialogContentText>
+                                Order# {this.state.userData.orderList[this.state.selectedIndex]}
+                                <br />
+                                Total: ${this.state.userData.orders[this.state.selectedIndex].total}
+                                <br />
+                                Rate your customer below!
+                                <br />
+                            </DialogContentText>
+                            {
+                                this.state.userData.orders[this.state.selectedIndex].customerRating === 0?
+                                <TextField
+                                    disabled={this.state.processing}
+                                    className="push-down"
+                                    select
+                                    label="Customer Rating"
+                                    fullWidth
+                                    value={this.state.userData.orders[this.state.selectedIndex].customerRating}
+                                    onChange={(e)=>{
+                                        const old = this.state.userData;
+                                        old.orders[this.state.selectedIndex].customerRating = e.target.value;
+                                        this.setState({
+                                            userData: old,
+                                            processing: true
+                                        })
+                                        if (e.target.value !== 0) this.updateCustomer(this.state.selectedIndex);
+                                        else this.setState({processing:false});
+                                    }}
+                                >   
+                                    <MenuItem value={0}><i>Choose a rating</i></MenuItem>
+                                    <MenuItem value={5}><span role="img" aria-label="star">⭐⭐⭐⭐⭐(5) </span></MenuItem>
+                                    <MenuItem value={4}><span role="img" aria-label="star">⭐⭐⭐⭐(4) </span></MenuItem>
+                                    <MenuItem value={3}><span role="img" aria-label="star">⭐⭐⭐(3) </span></MenuItem>
+                                    <MenuItem value={2}><span role="img" aria-label="star">⭐⭐(2) </span></MenuItem>
+                                    <MenuItem value={1}><span role="img" aria-label="star">⭐(1) </span></MenuItem>
+                                </TextField>:
+                                <Typography variant="subheading" className="push-down">
+                                    Customer Rating:&nbsp; 
+                                    <strong>
+                                    {this.state.userData.orders[this.state.selectedIndex].customerRating} <span role="img" aria-label="star">⭐</span>
+                                    </strong>
+                                </Typography>
 
-
+                            }
+                         
+                        </DialogContent>
+                    </div>:
+                    <div></div>
+                }
+                </Dialog>
                 <div className="column" data-aos ="flip-up"> 
                     <Card  data-aos ="flip-up" style ={cardDescription} >
                         <CardContent>
