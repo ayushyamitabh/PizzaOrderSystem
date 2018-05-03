@@ -490,52 +490,33 @@ export default class CustomerHome extends Component{
         })
     }
     updateDeliverer(index){
-        const duid = this.state.userData.orders[index].duid;
-        firebase.database().ref(`Users/${duid}`).once('value').then((snap)=>{
-            if (snap.val()){
-                var delivererData = snap.val();
-                var a = delivererData.averageRating * delivererData.ratingCount; // existing rating sum
-                var b = a + this.state.userData.orders[index].delivererRating; // new rating sum
-                var c = b / (delivererData.ratingCount + 1); // new average rating
-                delivererData.averageRating = c;
-                delivererData.ratingCount += 1;
-                firebase.database().ref(`Users/${duid}`).set(delivererData).then(()=>{
-                    firebase.database().ref(`Orders/${this.state.userData.orderList[index]}`).set(this.state.userData.orders[index]).then(()=>{
-                        this.setState({
-                            processing:false
-                        })
-                    })
-                })
-            }
+        const qData = {
+            duid: this.state.userData.orders[index].duid,
+            oid: this.state.userData.orderList[index],
+            odata: this.state.userData.orders[index]
+        };
+        axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/rateDeliverer',qData)
+        .then((completed)=>{
+            this.notify(completed.data.message);
+            this.setState({processing:false})
+        }).catch((err)=>{
+            this.notify(err.message);
+            this.setState({processing:false})
         })
     }
     updatePizza(index, key){
-        firebase.database().ref(`Orders/${this.state.userData.orderList[index]}`).set(this.state.userData.orders[index]).then(()=>{
-            firebase.database().ref(`Pizzas/${key}`).once('value').then((snap)=>{
-                if(snap.val()){
-                    var pizzaData = snap.val();
-                    var a = pizzaData.averageRating * pizzaData.totalOrders;
-                    var b = a + this.state.userData.orders[index].pizzaRatings[key].rating;
-                    var c = b / (pizzaData.totalOrders + 1);
-                    pizzaData.averageRating = c;
-                    pizzaData.totalOrders += 1;
-                    if (pizzaData.lastThreeRatings){
-                        if (pizzaData.lastThreeRatings.length >= 3){
-                            var newRatings = [pizzaData.lastThreeRatings[1], pizzaData.lastThreeRatings[2], this.state.userData.orders[index].pizzaRatings[key].rating];
-                            pizzaData.lastThreeRatings = newRatings;
-                        } else {
-                            pizzaData.lastThreeRatings.push(this.state.userData.orders[index].pizzaRatings[key].rating);
-                        }
-                    } else {
-                        pizzaData.lastThreeRatings =[this.state.userData.orders[index].pizzaRatings[key].rating];
-                    }
-                    firebase.database().ref(`Pizzas/${key}`).set(pizzaData).then(()=>{
-                        this.setState({
-                            processing: false
-                        })
-                    })
-                }
-            })
+        const qData = {
+            oid: this.state.userData.orderList[index],
+            odata: this.state.userData.orders[index],
+            pid: key
+        };
+        axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/ratePizza',qData)
+        .then((completed)=>{
+            this.notify(completed.data.message);
+            this.setState({processing:false})
+        }).catch((err)=>{            
+            this.notify(completed.data.message);
+            this.setState({processing:false})
         })
     }
     addToCart(index, quantity){
