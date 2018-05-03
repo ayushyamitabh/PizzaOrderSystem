@@ -47,3 +47,8 @@
     left: 0;
     z-index: 100;
 }
+.cart-button{
+    position: fixed !important;
+    bottom: 10px;
+    right: 10px;
+}

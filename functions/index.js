@@ -106,3 +106,72 @@ exports.getPizzas = functions.https.onRequest((req, res)=>{
         })
     })
 })
+
+exports.rateDeliverer = functions.https.onRequest((req, res)=>{
+    return cors(req, res, ()=>{
+        const duid = req.body.duid;
+        const orderID = req.body.oid;
+        const orderData = req.body.odata;
+        admin.database().ref(`Users/${duid}`).once('value').then((snap)=>{
+            if (snap.val()){
+                var preserveData = snap.val();
+                var delivererData = snap.val();
+                var a = delivererData.averageRating * delivererData.ratingCount; // existing rating sum
+                var b = a + orderData.delivererRating; // new rating sum
+                var c = b / (delivererData.ratingCount + 1); // new average rating
+                delivererData.averageRating = c;
+                delivererData.ratingCount += 1;
+                admin.database().ref(`Users/${duid}`).set(delivererData).then(()=>{
+                    admin.database().ref(`Orders/${orderID}`).set(orderData).then(()=>{
+                        res.status(200).send({done:true, message:"Updated deliverer's rating 😊"})
+                    }).catch((err)=>{
+                        res.status(500).send({done:false,error:err,message:"Couldn't update order data."})
+                    })
+                }).catch((err)=>{
+                    res.status(500).send({done:false,error:err,message:"Couldn't update deliverer's data."})
+                })
+            }
+        }).catch((err)=>{
+            res.status(500).send({done:false,error:err,message:"Couldn't get deliverer's data."})
+        })
+    })
+})
+
+exports.ratePizza = functions.https.onRequest((req,res)=>{
+    return cors(req, res, ()=>{
+        const oid = req.body.oid;
+        const odata = req.body.odata;
+        const pid = req.body.pid;
+        admin.database().ref(`Orders/${oid}`).set(odata).then(()=>{
+            admin.database().ref(`Pizzas/${pid}`).once('value').then((snap)=>{
+                if(snap.val()){
+                    var pizzaData = snap.val();
+                    var a = pizzaData.averageRating * pizzaData.totalOrders;
+                    var b = a + odata.pizzaRatings[pid].rating;
+                    var c = b / (pizzaData.totalOrders + 1);
+                    pizzaData.averageRating = c;
+                    pizzaData.totalOrders += 1;
+                    if (pizzaData.lastThreeRatings){
+                        if (pizzaData.lastThreeRatings.length >= 3){
+                            var newRatings = [pizzaData.lastThreeRatings[1], pizzaData.lastThreeRatings[2], odata.pizzaRatings[pid].rating];
+                            pizzaData.lastThreeRatings = newRatings;
+                        } else {
+                            pizzaData.lastThreeRatings.push(odata.pizzaRatings[pid].rating);
+                        }
+                    } else {
+                        pizzaData.lastThreeRatings =[odata.pizzaRatings[pid].rating];
+                    }
+                    admin.database().ref(`Pizzas/${pid}`).set(pizzaData).then(()=>{
+                        res.status(200).send({done:true,message:"Updated pizza's rating 😊"});
+                    }).catch((err)=>{
+                        res.status(500).send({done:false,error:err,message:"Couldn't update pizza's data."});
+                    })
+                }
+            }).catch((err)=>{
+                res.status(500).send({done:false,error:err,message:"Couldn't get pizza's data."});
+            })
+        }).catch((err)=>{
+            res.status(500).send({done:false,error:err,message:"Couldn't update order's data."});
+        })
+    })
+})

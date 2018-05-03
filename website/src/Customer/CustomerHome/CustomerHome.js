@@ -18,22 +18,28 @@ import {Avatar,
         InputAdornment,
         InputLabel,
         LinearProgress,
+        MenuList,
         MenuItem,
+        Popover,
         Snackbar,
         TextField,
         Typography} from 'material-ui';
 import * as firebase from 'firebase';
 import * as GoogleMapsLoader from 'google-maps';
-import Close from 'material-ui-icons/Close';
-import Logout from 'material-ui-icons/ExitToApp';
-import RemoveCart from 'material-ui-icons/RemoveShoppingCart';
-import Shop from 'material-ui-icons/Store';
-import AddShoppingCart from 'material-ui-icons/AddShoppingCart';
-import User from 'material-ui-icons/Face';
-import Details from 'material-ui-icons/LibraryBooks';
-import Comment from 'material-ui-icons/Comment';
 import './CustomerHome.css';
 import axios from 'axios';
+//=================== IMPORTED ICONS =========================
+import User from 'material-ui-icons/Face';
+import Shop from 'material-ui-icons/Store';
+import Close from 'material-ui-icons/Close';
+import Comment from 'material-ui-icons/Comment';
+import Logout from 'material-ui-icons/ExitToApp';
+import Cart from 'material-ui-icons/ShoppingCart';
+import Details from 'material-ui-icons/LibraryBooks';
+import CheckCircle from 'material-ui-icons/CheckCircle';
+import RemoveCart from 'material-ui-icons/RemoveShoppingCart';
+import AddShoppingCart from 'material-ui-icons/AddShoppingCart';
+//=============================================================
 
 export default class CustomerHome extends Component{
     constructor(props){
@@ -56,6 +62,7 @@ export default class CustomerHome extends Component{
             notifyMessage: '',
             step1complete: false,
             selectedShop: null,
+            selectedGMAPID: null,
             step2complete: false,
             confirm : {
                 show: false,
@@ -71,7 +78,8 @@ export default class CustomerHome extends Component{
                         callBack: ()=>{}
                     }
                 }
-            }
+            },
+            showCart: false
         }
         this.fireBaseListener = null;
         this.authListener = this.authListener.bind(this);
@@ -138,12 +146,18 @@ export default class CustomerHome extends Component{
                 .then((closeShops)=>{
                     var shops = closeShops.data.shops;
                     shops = shops.slice(0,3);
+                    if (shops.length === 0){
+                        this.notify("Couldn't find any shops near you.")
+                    }
+                    var bounds = new google.maps.LatLngBounds();
+                    bounds.extend(centerLocation);
                     shops.forEach((data, index)=>{
                         var tempMarker = new google.maps.Marker({
                             position: new google.maps.LatLng(data.location.x,data.location.y),
                             map: customerMap,
                             opacity: 0.5
                         });
+                        bounds.extend(tempMarker.getPosition());
                         tempMarker.setLabel(data.name);
                         tempMarker.addListener('click', ()=>{
                             this.setState({processing: true})
@@ -200,7 +214,8 @@ export default class CustomerHome extends Component{
                                                                 this.setState({
                                                                     processing: false,
                                                                     step1complete: true,
-                                                                    selectedShop: data
+                                                                    selectedShop: data,
+                                                                    selectedGMAPID: data.gmap_id
                                                                 });
                                                                 this.notify(`Let's get your order from ${data.name} started! 😊`);
                                                             }).catch((error)=>{
@@ -288,7 +303,8 @@ export default class CustomerHome extends Component{
                                                     this.setState({
                                                         processing: false,
                                                         step1complete: true,
-                                                        selectedShop: data
+                                                        selectedShop: data,
+                                                        selectedGMAPID: data.gmap_id
                                                     });
                                                     this.notify(`Let's get your order from ${data.name} started! 😊`);
                                                 }).catch((error)=>{
@@ -323,7 +339,8 @@ export default class CustomerHome extends Component{
                                             this.setState({
                                                 processing: false,
                                                 step1complete: true,
-                                                selectedShop: data
+                                                selectedShop: data,
+                                                selectedGMAPID: data.gmap_id
                                             });
                                             this.notify(`Let's get your order from ${data.name} started! 😊`);
                                         }).catch((error)=>{
@@ -357,7 +374,8 @@ export default class CustomerHome extends Component{
                                         this.setState({
                                             processing: false,
                                             step1complete: true,
-                                            selectedShop: data
+                                            selectedShop: data,
+                                            selectedGMAPID: data.gmap_id
                                         });
                                         this.notify(`Let's get your order from ${data.name} started! 😊`);
                                     }).catch((error)=>{
@@ -377,6 +395,7 @@ export default class CustomerHome extends Component{
                         })
                         restraunts.push(tempMarker);
                     })
+                    customerMap.fitBounds(bounds);
                     this.setState({
                         processing: false
                     })
@@ -471,53 +490,80 @@ export default class CustomerHome extends Component{
         })
     }
     updateDeliverer(index){
-        const duid = this.state.userData.orders[index].duid;
-        firebase.database().ref(`Users/${duid}`).once('value').then((snap)=>{
-            if (snap.val()){
-                var delivererData = snap.val();
-                var a = delivererData.averageRating * delivererData.ratingCount; // existing rating sum
-                var b = a + this.state.userData.orders[index].delivererRating; // new rating sum
-                var c = b / (delivererData.ratingCount + 1); // new average rating
-                delivererData.averageRating = c;
-                delivererData.ratingCount += 1;
-                firebase.database().ref(`Users/${duid}`).set(delivererData).then(()=>{
-                    firebase.database().ref(`Orders/${this.state.userData.orderList[index]}`).set(this.state.userData.orders[index]).then(()=>{
-                        this.setState({
-                            processing:false
-                        })
-                    })
-                })
-            }
+        const qData = {
+            duid: this.state.userData.orders[index].duid,
+            oid: this.state.userData.orderList[index],
+            odata: this.state.userData.orders[index]
+        };
+        axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/rateDeliverer',qData)
+        .then((completed)=>{
+            this.notify(completed.data.message);
+            this.setState({processing:false})
+        }).catch((err)=>{
+            this.notify(err.message);
+            this.setState({processing:false})
         })
     }
     updatePizza(index, key){
-        firebase.database().ref(`Orders/${this.state.userData.orderList[index]}`).set(this.state.userData.orders[index]).then(()=>{
-            firebase.database().ref(`Pizzas/${key}`).once('value').then((snap)=>{
-                if(snap.val()){
-                    var pizzaData = snap.val();
-                    var a = pizzaData.averageRating * pizzaData.totalOrders;
-                    var b = a + this.state.userData.orders[index].pizzaRatings[key].rating;
-                    var c = b / (pizzaData.totalOrders + 1);
-                    pizzaData.averageRating = c;
-                    pizzaData.totalOrders += 1;
-                    if (pizzaData.lastThreeRatings){
-                        if (pizzaData.lastThreeRatings.length >= 3){
-                            var newRatings = [pizzaData.lastThreeRatings[1], pizzaData.lastThreeRatings[2], this.state.userData.orders[index].pizzaRatings[key].rating];
-                            pizzaData.lastThreeRatings = newRatings;
-                        } else {
-                            pizzaData.lastThreeRatings.push(this.state.userData.orders[index].pizzaRatings[key].rating);
-                        }
-                    } else {
-                        pizzaData.lastThreeRatings =[this.state.userData.orders[index].pizzaRatings[key].rating];
-                    }
-                    firebase.database().ref(`Pizzas/${key}`).set(pizzaData).then(()=>{
-                        this.setState({
-                            processing: false
-                        })
+        const qData = {
+            oid: this.state.userData.orderList[index],
+            odata: this.state.userData.orders[index],
+            pid: key
+        };
+        axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/ratePizza',qData)
+        .then((completed)=>{
+            this.notify(completed.data.message);
+            this.setState({processing:false})
+        }).catch((err)=>{            
+            this.notify(completed.data.message);
+            this.setState({processing:false})
+        })
+    }
+    addToCart(index, quantity){
+        var pizza = this.state.selectedShop.pizzas[index];
+        if (quantity>=1){
+            if(this.state.userData.cart){
+                if(this.state.userData.cart.items[pizza.id]){
+                    var old = this.state.userData;
+                    old.cart.total += Number(quantity) * old.cart.items[pizza.id].unitPrice;
+                    old.cart.items[pizza.id].quantity += Number(quantity);
+                    this.setState({
+                        userData: old
+                    }) 
+                } else {
+                    var old = this.state.userData;
+                    old.cart.items[pizza.id] = {
+                        unitPrice: pizza.cost,
+                        quantity: Number(quantity),
+                        name: pizza.name
+                    };
+                    old.cart.total += Number(quantity) * old.cart.items[pizza.id].unitPrice;
+                    this.setState({
+                        userData: old
                     })
                 }
+            } else {
+                var old = this.state.userData;
+                old.cart = {
+                    name: this.state.selectedShop.name,
+                    gmap_id: this.state.selectedGMAPID,
+                    items: {
+                        [pizza.id]: {
+                            unitPrice: pizza.cost,
+                            quantity: Number(quantity),
+                            name: pizza.name
+                        }
+                    },
+                    total: Number(quantity) * pizza.cost
+                };
+                this.setState({
+                    userData: old
+                })
+            }            
+            firebase.database().ref(`Users/${this.state.user.uid}/cart`).set(this.state.userData.cart).then(()=>{
+                this.notify(`Updated your 🛒 - added ${quantity} x ${pizza.name}`);
             })
-        })
+        }
     }
     componentWillUnmount() {
         this.fireBaseListener && this.fireBaseListener();
@@ -526,8 +572,58 @@ export default class CustomerHome extends Component{
     render() {
         return(
             <div style={{padding:'50px 100px'}}>
-                <div className="top-loading">
+                {/*=============CART POPOVER DIALOG=============*/}
+                {
+                    this.state.showCart?                    
+                    <Popover
+                        open={this.state.showCart}
+                        onClose={()=>{this.setState({showCart:false})}}
+                        anchorEl={document.getElementById('open-cart-btn')}
+                        anchorOrigin={{
+                            vertical:'center',
+                            horizontal:'center'
+                        }}
+                        transformOrigin={{
+                            vertical: 'bottom',
+                            horizontal:'right'
+                        }}
+                    >
+                        <div style={{padding:'15px 30px'}}>
+                            <Typography variant="display1" style={{width:'30vw'}}>Your Cart</Typography>
+                            <Typography variant="subheading">Ordering from {this.state.userData.cart.name}</Typography>
+                            <Divider />
+                            <MenuList role="menu">
+                            {
+                                this.state.userData.cart?
+                                Object.keys(this.state.userData.cart.items).map((key, index)=>{
+                                    return(
+                                        <MenuItem key={`cart-item-${index}`}>
+                                            {this.state.userData.cart.items[key].name}
+                                        </MenuItem>
+                                    );
+                                }):null
+                            }
+                            </MenuList>
+                        </div>
+                    </Popover>:null
+                }
+                {/*=============CART FLOATING BUTTON=============*/}            
+                {
+                    this.state.userData.cart?
+                    <Button 
+                        variant="fab" 
+                        color="primary" 
+                        aria-label="Your Cart" 
+                        className="cart-button"
+                        id="open-cart-btn"
+                        onClick={()=>{this.setState({showCart:true})}}
+                    >
+                        <Cart />
+                    </Button>
+                    :null
+                }                
                 {/*=============TOP PAGE LOADING BAR=============*/}
+                <div className="top-loading">
                 {
                     this.state.processing?
                     <LinearProgress /> : null
@@ -848,7 +944,10 @@ export default class CustomerHome extends Component{
                                 variant="raised" 
                                 color="primary"
                                 onClick={()=>{
-                                    window.location.reload();
+                                    firebase.database().ref(`Users/${this.state.user.uid}/cart`).set({}).then(()=>{
+                                        this.notify("Emptied your 🛒");
+                                        window.location.reload();
+                                    })
                                 }}
                             >
                                 <RemoveCart  style={{marginRight: '10px'}}/>
@@ -895,7 +994,7 @@ export default class CustomerHome extends Component{
                                                                         type="number"
                                                                         endAdornment={
                                                                             <InputAdornment position="end">
-                                                                                <IconButton>
+                                                                                <IconButton onClick={()=>{this.addToCart(index, document.getElementById(`pizzaItem-${index}`).value);}}>
                                                                                     <AddShoppingCart />
                                                                                 </IconButton>
                                                                             </InputAdornment >
@@ -912,6 +1011,13 @@ export default class CustomerHome extends Component{
                                     }
                                 </CardContent>
                             </Card>:
+                            null
+                        }
+                        {
+                            this.state.userData.cart && this.state.step1complete?
+                            <Button fullWidth variant="raised" color="secondary">
+                                <CheckCircle style={{marginRight:'10px'}} /> Continue to next step
+                            </Button>:
                             null
                         }
                     </div>:
