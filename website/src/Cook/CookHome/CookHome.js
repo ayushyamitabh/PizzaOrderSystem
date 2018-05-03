@@ -6,7 +6,6 @@ import {Avatar,
         Card,
         CardContent,
         CardHeader,
-        CardMedia,
         Divider,
         TextField,
         Snackbar,
@@ -65,6 +64,7 @@ class CookHome extends Component {
             });
         }
     }
+
     handleFileSelect(event) {
         this.setState({
             pizzaImg: event.target.files[0]
@@ -98,12 +98,12 @@ class CookHome extends Component {
         }
         else {
             var pizzaPicture = document.getElementById("pizzaPicture").files[0];
-            var pizzaStorageRef = firebase.storage().ref().child('Pizzas/' + pizzaPicture.name).put(pizzaPicture).then(() =>{
+            firebase.storage().ref().child('Pizzas/' + pizzaPicture.name).put(pizzaPicture).then(() =>{
                 firebase.storage().ref().child('Pizzas/' + pizzaPicture.name).getDownloadURL().then((url) => {
                     this.setState({
                         pizzaImg: url
                     })
-                    var pizzasRef = firebase.database().ref().child('Pizzas/total').once('value').then((snap)=> {
+                    firebase.database().ref().child('Pizzas/total').once('value').then((snap)=> {
                         var current = snap.val();
                         var newID ='pizzaID' + current;
                         firebase.database().ref(`Pizzas/${newID}`).set({
@@ -133,16 +133,22 @@ class CookHome extends Component {
 
     retrievePizza() {
         const previousPizza = this.state.pizzas;
-        var pizzaRef = firebase.database().ref().child(`Pizzas`).on("child_added", (snapshot) =>{
-            previousPizza.push({
-                name: snapshot.val().name,
-                image: snapshot.val().image,
-                cost: snapshot.val().cost,
-                averageRating: snapshot.val().averageRating
-            })
-            this.setState({
-                pizzas: previousPizza
-            })
+        firebase.database().ref().child('Pizzas').on("child_added", (snapshot) =>{
+            if(snapshot.val().name === undefined)
+            {
+                return false;
+            }
+            else {
+                previousPizza.push({
+                    name: snapshot.val().name,
+                    image: snapshot.val().image,
+                    cost: snapshot.val().cost,
+                    averageRating: snapshot.val().averageRating
+                })
+                this.setState({
+                    pizzas: previousPizza
+                })
+            }
         });
     }
 
@@ -255,6 +261,7 @@ class CookHome extends Component {
                     message={this.state.notifyMsg}
                     autoHideDuration={2000}
                 />
+            {console.log(this.state.pizzas)}
             </div>
         );
     }
