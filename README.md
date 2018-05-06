@@ -39,18 +39,19 @@ Reach us at tagmhaxt@gmail.com
 6. AOS (Animation Provider) | [GitHub](https://github.com/michalsnik/aos)
 7. React Router | [Documentation](https://reacttraining.com/react-router/web/guides/basic-components)
 8. History | [GitHub](https://github.com/ReactTraining/history)
+9. Reactk-Sketch (Canvas Library) | [GitHub](https://github.com/tbolis/react-sketch)
 
 ###### FOR APP
 
-9. React Native | [Documentation](https://facebook.github.io/react-native/)
-10. React Native Material-UI | [GitHub](https://github.com/xotahal/react-native-material-ui)
-11. React Navigation | [Documentation](https://reactnavigation.org/)
-12. React Native Animatable (Animation Provider) | [GitHub](https://github.com/oblador/react-native-animatable)
-13. React Native Maps (Google Maps for RN) | [GitHub](https://github.com/react-community/react-native-maps)
-14. React Native Material Textfield | [GitHub](https://github.com/n4kz/react-native-material-textfield)
-15. React Native SnackBar | [GitHub](https://github.com/cooperka/react-native-snackbar)
-16. RN Sliding Up View | [GitHub](https://github.com/octopitus/rn-sliding-up-panel)
-17. React Native PopUp Dialog | [GitHub](https://github.com/jacklam718/react-native-popup-dialog)
+10. React Native | [Documentation](https://facebook.github.io/react-native/)
+11. React Native Material-UI | [GitHub](https://github.com/xotahal/react-native-material-ui)
+12. React Navigation | [Documentation](https://reactnavigation.org/)
+13. React Native Animatable (Animation Provider) | [GitHub](https://github.com/oblador/react-native-animatable)
+14. React Native Maps (Google Maps for RN) | [GitHub](https://github.com/react-community/react-native-maps)
+15. React Native Material Textfield | [GitHub](https://github.com/n4kz/react-native-material-textfield)
+16. React Native SnackBar | [GitHub](https://github.com/cooperka/react-native-snackbar)
+17. RN Sliding Up View | [GitHub](https://github.com/octopitus/rn-sliding-up-panel)
+18. React Native PopUp Dialog | [GitHub](https://github.com/jacklam718/react-native-popup-dialog)
 
 ----
 #### Getting Started:
