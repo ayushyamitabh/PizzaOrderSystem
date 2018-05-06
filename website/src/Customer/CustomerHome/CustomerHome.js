@@ -1,3 +1,6 @@
+import axios from 'axios';
+import './CustomerHome.css';
+import * as firebase from 'firebase';
 import React, {Component} from 'react';
 import {Avatar,
         Button,
@@ -22,16 +25,21 @@ import {Avatar,
         MenuItem,
         Popover,
         Snackbar,
+        Step,
+        StepContent,
+        StepLabel,
+        Stepper,
         TextField,
+        Toolbar,
+        Tooltip,
         Typography} from 'material-ui';
-import * as firebase from 'firebase';
 import * as GoogleMapsLoader from 'google-maps';
-import './CustomerHome.css';
-import axios from 'axios';
+import {SketchField, Tools} from 'react-sketch';
 //=================== IMPORTED ICONS =========================
 import User from 'material-ui-icons/Face';
 import Shop from 'material-ui-icons/Store';
 import Close from 'material-ui-icons/Close';
+import Delete from 'material-ui-icons/Delete';
 import Comment from 'material-ui-icons/Comment';
 import Logout from 'material-ui-icons/ExitToApp';
 import Cart from 'material-ui-icons/ShoppingCart';
@@ -39,6 +47,14 @@ import Details from 'material-ui-icons/LibraryBooks';
 import CheckCircle from 'material-ui-icons/CheckCircle';
 import RemoveCart from 'material-ui-icons/RemoveShoppingCart';
 import AddShoppingCart from 'material-ui-icons/AddShoppingCart';
+//=================== DRAWING TOOL ICONS =========================
+import DrawTool from 'material-ui-icons/Create';
+import SelectTool from 'material-ui-icons/OpenWith';
+import LineTool from 'material-ui-icons/Remove';
+import RectangleTool from 'material-ui-icons/CropDin';
+import CircleTool from 'material-ui-icons/PanoramaFishEye';
+import Undo from 'material-ui-icons/Replay';
+import LoadImage from 'material-ui-icons/RestaurantMenu';
 //=============================================================
 
 export default class CustomerHome extends Component{
@@ -79,7 +95,12 @@ export default class CustomerHome extends Component{
                     }
                 }
             },
-            showCart: false
+            showCart: false,
+            customizeStep: 0,
+            customizeCompleted: null,
+            selectedTool: Tools.Select,
+            customizedImages: null,
+            step3complete:false
         }
         this.fireBaseListener = null;
         this.authListener = this.authListener.bind(this);
@@ -265,8 +286,11 @@ export default class CustomerHome extends Component{
                                                 {
                                                     text: 'Okay',
                                                     callBack: ()=>{
+                                                        var old = this.state.userData.cart;
+                                                        old.cart = null;
                                                         this.setState({
                                                             processing: false,
+                                                            userData: old,
                                                             confirm : {
                                                                 show: false,
                                                                 title: '',
@@ -515,7 +539,7 @@ export default class CustomerHome extends Component{
             this.notify(completed.data.message);
             this.setState({processing:false})
         }).catch((err)=>{            
-            this.notify(completed.data.message);
+            this.notify(err.message);
             this.setState({processing:false})
         })
     }
@@ -596,14 +620,55 @@ export default class CustomerHome extends Component{
                             {
                                 this.state.userData.cart?
                                 Object.keys(this.state.userData.cart.items).map((key, index)=>{
+                                    var cartItem = this.state.userData.cart.items[key];
                                     return(
-                                        <MenuItem key={`cart-item-${index}`}>
-                                            {this.state.userData.cart.items[key].name}
+                                        <MenuItem key={`cart-item-${index}`} >
+                                            <div style={{display:'flex', flexDirection:'column', justifyContent:'center', alignItems:'flex-start', flex: 1}}>
+                                                <Typography variant="subheading">{cartItem.name}</Typography>
+                                                <Typography style={{fontSize:'11px', color:'lightgray'}}>{cartItem.quantity} x ${cartItem.unitPrice} = ${cartItem.quantity*cartItem.unitPrice}</Typography>
+                                            </div>
+                                            <IconButton
+                                                onClick={()=>{
+                                                    var old = this.state.userData;
+                                                    delete old.cart.items[key];
+                                                    this.setState({
+                                                        showCart:false,
+                                                        processing: true,
+                                                        userData: old
+                                                    })
+                                                    if (Object.keys(old.cart.items).length <=0) {
+                                                        this.notify("🛒 is empty now");
+                                                        old.cart = null;
+                                                    }
+                                                    firebase.database().ref(`Users/${this.state.user.uid}/cart`).set(old.cart).then(()=>{
+                                                        this.setState({
+                                                            processing: false
+                                                        })
+                                                        if (old.cart) this.setState({showCart:true})
+                                                    }).catch(()=>{
+                                                        this.notify("Couldn't update 🛒 online. We will try again soon.")
+                                                    })
+                                                }}> 
+                                                <Delete /> 
+                                            </IconButton>
                                         </MenuItem>
                                     );
                                 }):null
                             }
                             </MenuList>
+                            <Button variant="raised" color="secondary" size="small" fullWidth 
+                                onClick={()=>{
+                                    var old = this.state.userData;
+                                    old.cart = null;
+                                    this.setState({showCart:false, userData:old});
+                                    firebase.database().ref(`Users/${this.state.user.uid}/cart`).set(null).then(()=>{
+                                        this.notify("Emptied your 🛒");
+                                    }).catch(()=>{
+                                        this.notify("Couldn't update 🛒 online. We will try again soon.")
+                                    })
+                                }}>
+                                Empty 🛒
+                            </Button>
                         </div>
                     </Popover>:null
                 }
@@ -611,6 +676,7 @@ export default class CustomerHome extends Component{
                 {
                     this.state.userData.cart?
                     <Button 
+                        disabled={this.state.step3complete}
                         variant="fab" 
                         color="primary" 
                         aria-label="Your Cart" 
@@ -624,10 +690,10 @@ export default class CustomerHome extends Component{
                 }                
                 {/*=============TOP PAGE LOADING BAR=============*/}
                 <div className="top-loading">
-                {
-                    this.state.processing?
-                    <LinearProgress /> : null
-                }
+                    {
+                        this.state.processing?
+                        <LinearProgress /> : null
+                    }
                 </div>
                 {/*=============NOTIFCATION SNACKBAR=============*/}
                 <Snackbar 
@@ -661,8 +727,7 @@ export default class CustomerHome extends Component{
                     disableBackdropClick={true} 
                     disableEscapeKeyDown={true}
                     aria-labelledby="alert-dialog-title"
-                    aria-describedby="alert-dialog-description"
-                >
+                    aria-describedby="alert-dialog-description">
                     <DialogTitle id="alert-dialog-title">{this.state.confirm.title}</DialogTitle>
                     <DialogContent>
                         <DialogContentText>
@@ -691,8 +756,7 @@ export default class CustomerHome extends Component{
                     onClose={()=>{this.hideDetails(false)}} 
                     open={this.state.showDetails} 
                     disableBackdropClick={true} 
-                    disableEscapeKeyDown={true}
-                >
+                    disableEscapeKeyDown={true}>
                 {
                     this.state.showDetails ?
                     <div>                        
@@ -862,7 +926,7 @@ export default class CustomerHome extends Component{
                         <Typography variant="display2" style={{flex:1}}>
                             Welcome, {this.state.user.displayName}
                         </Typography>
-                        <Button size="small"><User style={{marginRight:'5px'}} />Account</Button>
+                        {/*<Button size="small"><User style={{marginRight:'5px'}} />Account</Button>*/}
                         <Button onClick={()=>{firebase.auth().signOut();}} size="small"><Logout style={{marginRight:'5px'}}/>signout</Button>
                     </div>:
                     null
@@ -940,6 +1004,7 @@ export default class CustomerHome extends Component{
                         {
                             this.state.step1complete === true?
                             <Button 
+                                disabled={this.state.step3complete}
                                 fullWidth
                                 variant="raised" 
                                 color="primary"
@@ -959,7 +1024,7 @@ export default class CustomerHome extends Component{
                         }
                         {/*=============MENU AND SHOP DETAILS=============*/}
                         {
-                            this.state.step1complete === true?
+                            this.state.step1complete === true ?
                             <Card data-aos="fade-up">
                                 <CardHeader 
                                     title={this.state.selectedShop.name}
@@ -990,11 +1055,12 @@ export default class CustomerHome extends Component{
                                                                 <FormControl>
                                                                     <InputLabel htmlFor={`pizzaItem-${index}`}>Quantity</InputLabel>
                                                                     <Input
+                                                                        disabled={this.state.step3complete}
                                                                         id={`pizzaItem-${index}`}
                                                                         type="number"
                                                                         endAdornment={
                                                                             <InputAdornment position="end">
-                                                                                <IconButton onClick={()=>{this.addToCart(index, document.getElementById(`pizzaItem-${index}`).value);}}>
+                                                                                <IconButton disabled={this.state.step3complete} onClick={()=>{this.addToCart(index, document.getElementById(`pizzaItem-${index}`).value);}}>
                                                                                     <AddShoppingCart />
                                                                                 </IconButton>
                                                                             </InputAdornment >
@@ -1013,13 +1079,208 @@ export default class CustomerHome extends Component{
                             </Card>:
                             null
                         }
+                        {/*=============CONTINUE TO DRAWING ON PIZZA=============*/}
                         {
                             this.state.userData.cart && this.state.step1complete?
-                            <Button fullWidth variant="raised" color="secondary">
+                            <Button fullWidth variant="raised" color="secondary" 
+                                disabled={this.state.customizeCompleted?true:false}
+                                onClick={()=>{
+                                    var toSet = new Array(Object.keys(this.state.userData.cart).length);
+                                    toSet.fill(false);
+                                    this.setState({step2complete:true,customizeCompleted:toSet})
+                                }}>
                                 <CheckCircle style={{marginRight:'10px'}} /> Continue to next step
                             </Button>:
                             null
                         }
+                        {/*=============DRAWING BOARD STEPPERS=============*/}
+                        {
+                            this.state.step2complete === true?
+                            <Card data-aos="fade-up" data-aos-offset="10" data-aos-once={true}>
+                                <CardHeader 
+                                    title="Customize Your Pizzas"
+                                    subheader="Draw on your pizzas 🎨🖌"
+                                    style={{paddingBottom:0}}
+                                />                                
+                                <CardContent style={{paddingTop:0}}>
+                                    <Divider className="push-down"/>
+                                    <Typography variant="caption" className="push-down"> 
+                                        <strong>Skip:</strong> Won't save customize progress. You can still come back and edit it. |
+                                        <strong> Save & Continue:</strong> Will save your customization. You won't be able to edit it. |
+                                        <i> Leaving this page will also lose all customization - even saved ones. Continuing to payment will lock-in all customization.</i>
+                                    </Typography>
+                                    <Stepper orientation="vertical" activeStep={this.state.customizeStep}>
+                                        {
+                                            this.state.userData.cart?
+                                            Object.keys(this.state.userData.cart.items).map((key,index)=>{
+                                                var custPizza = this.state.userData.cart.items[key];
+                                                return(
+                                                    <Step key={index} active={this.state.customizeStep === index} completed={this.state.customizeCompleted[index]}>
+                                                        <StepLabel>{custPizza.name}</StepLabel>
+                                                        <StepContent>
+                                                        {this.state.customizeCompleted[index] === false?
+                                                            <div>
+                                                                <Toolbar>
+                                                                    <Typography variant="subheading">
+                                                                        Drawing Tools
+                                                                    </Typography>
+                                                                    <Typography variant="caption" style={{flex:1, paddingLeft: 10}}> 
+                                                                        Use this toolbar to switch tools for drawing.
+                                                                    </Typography>
+                                                                    <Tooltip title="Load Pizza Image">
+                                                                        <IconButton onClick={()=>{
+                                                                            firebase.database().ref(`Pizzas/${key}/image`).once('value').then((snap)=>{
+                                                                                if (snap.val() && this[`sketch${index}`]) {
+                                                                                    document.getElementById('pizza-bckg').src=snap.val();
+                                                                                }
+                                                                            })
+                                                                        }}> <LoadImage /> </IconButton>
+                                                                    </Tooltip>
+                                                                    <Tooltip title="Undo">
+                                                                        <IconButton onClick={()=>{this[`sketch${index}`].undo();}}> 
+                                                                            <Undo /> 
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                    <Tooltip title="Select">
+                                                                        <IconButton onClick={()=>{this.setState({selectedTool:Tools.Select})}} color={this.state.selectedTool===Tools.Select?"secondary":"default"}> 
+                                                                         <SelectTool /> 
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                    <Tooltip title="Pencil">
+                                                                        <IconButton onClick={()=>{this.setState({selectedTool:Tools.Pencil})}} color={this.state.selectedTool===Tools.Pencil?"secondary":"default"}> 
+                                                                            <DrawTool /> 
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                    <Tooltip title="Line">
+                                                                        <IconButton onClick={()=>{this.setState({selectedTool:Tools.Line})}} color={this.state.selectedTool===Tools.Line?"secondary":"default"}> 
+                                                                            <LineTool /> 
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                    <Tooltip title="Rectangle">
+                                                                        <IconButton onClick={()=>{this.setState({selectedTool:Tools.Rectangle})}} color={this.state.selectedTool===Tools.Rectangle?"secondary":"default"}> 
+                                                                            <RectangleTool /> 
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                    <Tooltip title="Circle">                                        
+                                                                        <IconButton onClick={()=>{this.setState({selectedTool:Tools.Circle})}} color={this.state.selectedTool===Tools.Circle?"secondary":"default"}> 
+                                                                            <CircleTool /> 
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                    <Tooltip title="Clear">
+                                                                        <IconButton onClick={()=>{this[`sketch${index}`].clear();}}> 
+                                                                            <Delete /> 
+                                                                        </IconButton>
+                                                                    </Tooltip>
+                                                                </Toolbar>
+                                                                <SketchField 
+                                                                    style={{border: '1px solid black', margin:'0 auto'}}
+                                                                    name={`sketch${index}`}
+                                                                    ref={(c)=> {
+                                                                        this[`sketch${index}`] = c;
+                                                                    }}
+                                                                    width='300px' 
+                                                                    height='300px' 
+                                                                    tool={this.state.selectedTool} 
+                                                                    lineColor='black'
+                                                                    backgroundColor='#f0d0f0'
+                                                                    lineWidth={3}
+                                                                    crossOrigin
+                                                                />
+                                                                <div style={{width:300,height:300,margin:'0 auto',marginTop:'-300px'}}><img style={{width:300,height:300}} id="pizza-bckg" /></div>
+                                                                <Button 
+                                                                    fullWidth 
+                                                                    color="secondary" 
+                                                                    onClick={()=>{
+                                                                        this.setState({
+                                                                            customizeStep: this.state.customizeStep + 1
+                                                                        })
+                                                                    }}>
+                                                                    Skip
+                                                                </Button>
+                                                                <Button 
+                                                                    disabled={this.state.customizeCompleted[index]}
+                                                                    variant="raised"
+                                                                    fullWidth 
+                                                                    color="primary" 
+                                                                    onClick={()=>{
+                                                                        var old = this.state.customizeCompleted;
+                                                                        old[index] = true;
+                                                                        this[`sketch${index}`].crossOrigin = "Anonymous";
+                                                                        var customImages = this.state.customizedImages;
+                                                                        if(customImages) customImages[key] = this[`sketch${index}`].toDataURL('image/jpeg');
+                                                                        else customImages = {[key]:this[`sketch${index}`].toDataURL('image/jpeg')};
+                                                                        this.setState({
+                                                                            customizeCompleted: old,
+                                                                            customizeStep: this.state.customizeStep + 1,
+                                                                            customizedImages:customImages
+                                                                        })
+                                                                    }}>
+                                                                    Save & Continue
+                                                                </Button>
+                                                            </div>:
+                                                            <div>
+                                                                <img src={this.state.customizedImages[key]} style={{width:300,height:300,border:'1px solid black',margin:'0 auto'}}/>
+                                                                <Typography variant="caption">Saved</Typography>
+                                                                <Button 
+                                                                    fullWidth 
+                                                                    color="secondary" 
+                                                                    onClick={()=>{
+                                                                        this.setState({
+                                                                            customizeStep: this.state.customizeStep + 1
+                                                                        })
+                                                                    }}>
+                                                                    Next
+                                                                </Button>
+                                                            </div>
+                                                        }
+                                                        </StepContent>
+                                                    </Step>
+                                                );
+                                            }):null
+                                        }
+                                    </Stepper>
+                                    {
+                                        this.state.customizeStep > 0 ?
+                                            <div>
+                                                <Button
+                                                    disabled={this.state.step3complete}
+                                                    variant="raised"
+                                                    fullWidth 
+                                                    color="secondary" 
+                                                    size="small"
+                                                    onClick={()=>{
+                                                        this.setState({
+                                                            customizeStep: this.state.customizeStep -1
+                                                        })
+                                                    }}>
+                                                    Back
+                                                </Button>
+                                                {
+                                                    this.state.customizeCompleted && this.state.customizeStep >= Object.keys(this.state.userData.cart.items).length?
+                                                    <Button 
+                                                        disabled={this.state.step3complete}
+                                                        variant="raised"
+                                                        fullWidth 
+                                                        color="primary" 
+                                                        size="small"
+                                                        onClick={()=>{
+                                                            this.setState({
+                                                                step3complete: true
+                                                            })
+                                                        }}
+                                                    > 
+                                                        Continue to Payment
+                                                    </Button>:
+                                                    null
+                                                }
+                                            </div>
+                                        :null
+                                    }
+                                </CardContent>
+                            </Card>:
+                            null
+                        }
+                        {/*=============PAYMENT AND PLACE ORDER=============*/}
                     </div>:
                     null
                 }
