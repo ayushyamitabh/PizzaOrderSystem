@@ -2,53 +2,68 @@
     user-select: none !important;
 }
 .home-page{
-    height: 100%;
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    overflow: hidden;
+    max-width: 100% !important;
+    margin-bottom: 5%;
+    overflow-x: hidden;
 }
 .title-bar{
-    height: 35%;
+    padding-top: 5%;
     display: flex;
     flex-direction: row;
-    justify-content: center;
+    width: 100%;
     align-items: center;
+    justify-content: center;
 }
 .title-bar img{
-    max-height: 50%;
-    width: auto;
-    margin-left: -5%;
-}
-.title-bar .title{
-    color: rgb(172, 58, 58);
-    font-size: 70px !important;
-}
-.title-bar .tag-line{
-    font-size: 40px !important;
-}
-.login-form{
-    width:  50%;
-    margin: 0 10px;
-}
-.login-form-content{
-    padding: 50px !important;
-    padding-top: 0 !important;
-}
-.username, .password, .login {
-    margin-top: 10px !important;
-}
-.signup-line{
-    padding-top: 10px !important;
-}
-.login-form-header{
-    padding: 50px !important;
-    padding-bottom: 0 !important;
+    margin-left: -105px;
+    width: 250px;
+    height: 250px;
 }
 .home-page-content{
     display: flex;
     flex-direction: row;
-    width: 80%;
-    margin-top: 40px;
-    max-height: 55%;
+    width: 85%;
+    margin: 0 auto;
+    margin-top: 5%;
+    justify-content: center !important;
+}
+.login-form{
+    flex: 1;
+    margin: 0 10px;
+    padding: 20px !important;
+}
+.push-down{
+    margin-top: 10px !important;
+}
+@media only screen and (max-width: 1024px){
+    .title-bar .title{
+        font-size: 50px;
+    }
+    .title-bar .tag-line{
+        font-size: 30px;
+    }
+}
+@media only screen and (max-width: 768px){
+    .title-bar .title{
+        font-size: 50px;
+    }
+    .title-bar .tag-line{
+        font-size: 20px;
+    }
+    .title-bar img{
+        margin-left: -75px;
+        width: 150px;
+        height: 150px;
+    }
+    .home-page-content{
+        flex-direction: column;
+    }
+}
+@media only screen and (max-width: 650px){
+    .title-bar .tag-line{
+        display: none;
+    }
+    .title-bar img{
+        margin-left: -25px;
+    }
 }

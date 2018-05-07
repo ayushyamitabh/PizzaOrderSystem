@@ -9,6 +9,9 @@
     height: 70px;
     margin-right: 20px;
 }
+.customer-header .user-name{
+    flex: 1;
+}
 .past-orders{
     display: flex;
     flex-direction: row;
@@ -19,6 +22,7 @@
     overflow-x: auto;
     overflow-y: hidden;
     padding-bottom: 10px;
+
 }
 .no-orders{
     justify-self: center;
@@ -51,4 +55,81 @@
     position: fixed !important;
     bottom: 10px;
     right: 10px;
+}
+.customer-page{
+    padding: 50px 100px;
+    max-width: 100%;
+}
+.tools{
+    width: 100%;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+}
+#pizza-bckg-cont{
+    width: 300px;
+    min-height: 300px;
+    margin: 0 auto;
+    margin-top: -300px !important;
+}
+#pizza-bckg{
+    width: 300px;
+    min-height: 300px;
+}
+@media only screen and (max-width: 768px){
+    .tools{
+        max-width: 90% !important;
+    }
+    .tools .hint{
+        display: none;
+    }
+    .tools h3{
+        display: none !important;
+    }
+    .customer-header .user-avatar{
+        width: 25px;
+        height: 25px;
+        margin-right: 5px;
+    }
+    .customer-header .user-name{
+        font-size: 25px;
+    }
+}
+@media only screen and (max-width: 650px){
+    .customer-page{
+        padding: 5px;
+    }
+    .customer-header .user-avatar{
+        width: 35px;
+        height: 35px;
+        margin-right: 5px;
+    }
+    .customer-header .user-name{
+        font-size: 21px;
+    }
+    .cart-button{
+        z-index: 200;
+    }
+    .tools{
+        max-width: 90% !important;
+        margin-right: 100px !important;
+    }
+    .tools .hint{
+        display: none;
+    }
+    .tools h3{
+        display: none !important;
+    }
+    canvas{
+        width: 100% !important;
+        margin:  0 auto !important;
+        border: 1px solid black;
+    }
+    #pizza-bckg-cont{
+        width: 100% !important;
+        height: 300px;
+    }
+    #pizza-bckg{
+        width: 100% !important;
+        height: 300px;
+    }
 }

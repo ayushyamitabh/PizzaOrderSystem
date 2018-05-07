@@ -16,3 +16,12 @@
     height: 500px;
     border: 1px;
 }
+@media only screen and (max-width: 650px){
+    .add-shop-page{
+        padding: 5% 10px;
+        padding-bottom: 0 !important;
+    }
+    h1{
+        font-size: 30px !important;
+    }
+}

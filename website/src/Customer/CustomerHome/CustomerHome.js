@@ -595,7 +595,7 @@ export default class CustomerHome extends Component{
     }
     render() {
         return(
-            <div style={{padding:'50px 100px'}}>
+            <div className="customer-page">
                 {/*=============CART POPOVER DIALOG=============*/}
                 {
                     this.state.showCart?                    
@@ -628,6 +628,7 @@ export default class CustomerHome extends Component{
                                                 <Typography style={{fontSize:'11px', color:'lightgray'}}>{cartItem.quantity} x ${cartItem.unitPrice} = ${cartItem.quantity*cartItem.unitPrice}</Typography>
                                             </div>
                                             <IconButton
+                                                disabled={this.state.step2complete}
                                                 onClick={()=>{
                                                     var old = this.state.userData;
                                                     delete old.cart.items[key];
@@ -656,7 +657,8 @@ export default class CustomerHome extends Component{
                                 }):null
                             }
                             </MenuList>
-                            <Button variant="raised" color="secondary" size="small" fullWidth 
+                            <Button variant="raised" color="secondary" size="small" fullWidth
+                                disabled={this.state.step2complete}
                                 onClick={()=>{
                                     var old = this.state.userData;
                                     old.cart = null;
@@ -923,7 +925,7 @@ export default class CustomerHome extends Component{
                             src={this.state.user.profilePicture}
                             className="user-avatar"
                         />
-                        <Typography variant="display2" style={{flex:1}}>
+                        <Typography variant="display2" className="user-name">
                             Welcome, {this.state.user.displayName}
                         </Typography>
                         {/*<Button size="small"><User style={{marginRight:'5px'}} />Account</Button>*/}
@@ -1025,7 +1027,7 @@ export default class CustomerHome extends Component{
                         {/*=============MENU AND SHOP DETAILS=============*/}
                         {
                             this.state.step1complete === true ?
-                            <Card data-aos="fade-up">
+                            <Card data-aos="fade-up" data-aos-once={true}>
                                 <CardHeader 
                                     title={this.state.selectedShop.name}
                                     subheader={this.state.selectedShop.address}
@@ -1035,7 +1037,7 @@ export default class CustomerHome extends Component{
                                     <Divider className="push-down"/>
                                     {
                                         this.state.selectedShop.pizzas?
-                                        <div style={{display: 'flex', flexDirection: 'row', paddingTop: '20px'}}>
+                                        <div className="past-orders" >
                                             {   
                                                 this.state.selectedShop.pizzas?
                                                 this.state.selectedShop.pizzas.map((data, index)=>{
@@ -1120,11 +1122,11 @@ export default class CustomerHome extends Component{
                                                         <StepContent>
                                                         {this.state.customizeCompleted[index] === false?
                                                             <div>
-                                                                <Toolbar>
+                                                                <Toolbar className="tools">
                                                                     <Typography variant="subheading">
                                                                         Drawing Tools
                                                                     </Typography>
-                                                                    <Typography variant="caption" style={{flex:1, paddingLeft: 10}}> 
+                                                                    <Typography variant="caption" style={{flex:1, paddingLeft: 10}} className="hint"> 
                                                                         Use this toolbar to switch tools for drawing.
                                                                     </Typography>
                                                                     <Tooltip title="Load Pizza Image">
@@ -1186,7 +1188,7 @@ export default class CustomerHome extends Component{
                                                                     lineWidth={3}
                                                                     crossOrigin
                                                                 />
-                                                                <div style={{width:300,height:300,margin:'0 auto',marginTop:'-300px'}}><img style={{width:300,height:300}} id="pizza-bckg" /></div>
+                                                                <div id="pizza-bckg-cont"><img id="pizza-bckg" /></div>
                                                                 <Button 
                                                                     fullWidth 
                                                                     color="secondary" 
