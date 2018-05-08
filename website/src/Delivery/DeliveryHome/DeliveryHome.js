@@ -66,6 +66,8 @@ class DeliveryHome extends Component{
             notifyMessage: '',
             step1complete: false,
             selectedShop: null,
+            orderID: [],
+            customerRating:''
             
         };
         this.fireBaseListener = null;
@@ -75,6 +77,7 @@ class DeliveryHome extends Component{
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
         this.updateCustomer = this.updateCustomer.bind(this);
+        this.addRating = this.addRating.bind(this);
   }
     
     handleChange(e) {
@@ -98,8 +101,23 @@ class DeliveryHome extends Component{
          
   }
    
-    componentDidMount(){
+  addRating(){
+        var previousOrderID = this.state.orderID;
+      firebase.database().ref().child(`Users`).on('value', (snap)=>{
+        const delivererID = snap.child(`${this.state.user.cuid}/orders`).val();
+        previousOrderID.push(delivererID);
+        this.setState ({
+            orderID: previousOrderID
+        })
+        console.log(this.state.orderID);
+
+      });
+  }
+
+    componentDidMount() {
        this.authListener();
+       this.addRating();
+
     }
     
     componentWillUnmount(){
@@ -116,7 +134,7 @@ class DeliveryHome extends Component{
                             user: {
                                 displayName: user.displayName,
                                 profilePicture: user.photoURL,
-                                uid: user.uid
+                                cuid: user.uid
                             },
                             userData : {
                                 variant: snap.val().type,
@@ -160,6 +178,8 @@ class DeliveryHome extends Component{
             }
         });
     }
+
+
     
     updateCustomer(index){      
         const uid = this.state.userData.orders[index].uid;
@@ -171,7 +191,7 @@ class DeliveryHome extends Component{
                 var c = b / (customerData.ratingCount +1);
                 customerData.averageRating = c;
                 customerData.ratingCount +=1;
-                firebase.database().ref(`Users/$(uid)`).set(customerData).then (()=>{           firebase.database().ref(`Orders/${this.state.userData.orderList[index]}`).set(this.state.userData.orders[index]).then(()=>{
+                firebase.database().ref(`Users/$(uid)`).set(customerData).then (()=>{firebase.database().ref(`Orders/${this.state.userData.orderList[index]}`).set(this.state.userData.orders[index]).then(()=>{
                         this.setState({
                             processing:false                
                         })
@@ -202,6 +222,7 @@ class DeliveryHome extends Component{
 };
         
         return ( 
+            // Welcome Title
             <div style={{padding:'50px 100px'}}>
                 <div className="signup-page"> 
                     <div className="customer-header" data-aos = "fade-up">
@@ -220,7 +241,8 @@ class DeliveryHome extends Component{
                 </div>
 
           
-            
+            {/* Past Orders */}
+
                 <div style={{marginTop:'25px',textAlign:'center'}}>
                         <Typography variant="display1" className="push-down" color ="inherit" data-aos ="fade-up">
                             Your Past Orders 
@@ -236,7 +258,9 @@ class DeliveryHome extends Component{
                 {
                     this.state.userData.orders?
                         this.state.userData.orders.map((data,index)=>{
-                            console.log(this.state.userData);
+                            
+                            if(this.state.userData.orders[index].status === 'delivered'){
+                            console.log(this.state.userData.orders[index].status);
                             return(
                                 <Card key={index} data-aos="fade-left" className="order-card">
                                     <CardHeader 
@@ -277,7 +301,63 @@ class DeliveryHome extends Component{
                                                 </CardActions>
                                             </Card>
                                 );
-                            })
+                          }
+                         else if(this.state.userData.orders[index].status === 'accepted'){
+                            console.log(this.state.userData.orders[index].status);
+                            return(
+                                <div className="signup-page" style={{marginTop:'25px',textAlign:'center'}}> 
+                                <Typography className="push-down" color ="inherit" variant="display2">
+                                  Your Current Orders  
+                                </Typography>
+                                
+                                <Card key={index} data-aos="fade-left" className="order-card">
+                                    <CardHeader 
+                                        title={data.shopName}
+                                        style={{paddingBottom: 0}}/>
+                                           
+                                        <CardContent style={{paddingBottom:0, paddingTop: 0}}>
+                                            {
+                                          
+                                                data.customerRating === 0 ? 
+                                                    <Typography variant="subheading" style={{color:'red'}}>
+                                                        <i> Customer not rated yet</i>
+                                                    
+                                                    </Typography>:
+
+      
+                                                    <Typography variant="subheading">
+                                                        Customer Rating: <strong>{data.customerRating} <span role="img" aria-label="star">⭐</span></strong>
+                                                    </Typography>
+                                            }
+                                                    <Typography variant="subheading" style={{fontSize:'10.5px'}}>
+                                                        <i>See details to rate customers.</i>
+                                                    </Typography>
+
+                                                    <Divider />
+                                                            
+                                        </CardContent>
+
+                                                <CardActions>
+                                                    <Button 
+                                                        fullWidth
+                                                        onClick={()=>{this.showDetails(index)}} 
+                                                        color="primary" 
+                                                        size="small">
+                                                        <Details style={{marginRight:'10px'}} />
+                                                        See details
+                                                    </Button>
+                                                </CardActions>
+                                            </Card>
+
+
+                                </div>
+
+                            )
+
+                         }
+                         else return null;  
+                    })
+                        
                     :
                      <Typography variant="subheading" className="no-orders">{this.state.userData.ordersMesage}
                      </Typography>
@@ -287,6 +367,9 @@ class DeliveryHome extends Component{
             </div>
 
             <Divider />
+            
+            {/* View Past Order Details */}
+
             <Dialog 
                     onClose={()=>{this.hideDetails(false)}} 
                     open={this.state.showDetails} 
@@ -297,8 +380,8 @@ class DeliveryHome extends Component{
                     this.state.showDetails ?
                     <div>                        
                     {
-                        this.state.processing?
-                        <LinearProgress />:null
+                        //this.state.processing?
+                        //<LinearProgress />:null
                     }
                         <DialogTitle
                             children={
@@ -352,13 +435,122 @@ class DeliveryHome extends Component{
                                 </Typography>
 
                             }
+                                <Button fullWidth color="secondary" > Submit Rating</Button>
+                             {/* {
+                                Object.keys(this.state.userData.orders[this.state.selectedIndex].pizzaRatings).map((key, index)=>{
+                                    var pizza = this.state.userData.orders[this.state.selectedIndex].pizzaRatings[key];
+                                    if (pizza.rating === 0){
+                                        return(
+                                            <TextField 
+                                                disabled={this.state.processing}
+                                                className="push-down"
+                                                key={`pizza${index}`}
+                                                select
+                                                fullWidth
+                                                label={`Rate ${pizza.name}`}
+                                                value={pizza.rating}
+                                                onChange={(e)=>{
+                                                    var old = this.state.userData;
+                                                    old.orders[this.state.selectedIndex].pizzaRatings[key].rating = e.target.value;
+                                                    this.setState({
+                                                        userData: old,
+                                                        processing: true
+                                                    })
+                                                    if (e.target.value !== 0) this.updatePizza(this.state.selectedIndex, key);
+                                                    else this.setState({processing:false});
+                                                }}
+                                            >
+                                                <MenuItem value={0}><i>Choose a rating</i></MenuItem>
+                                                <MenuItem value={5}><span role="img" aria-label="star">⭐⭐⭐⭐⭐(5) </span></MenuItem>
+                                                <MenuItem value={4}><span role="img" aria-label="star">⭐⭐⭐⭐(4) </span></MenuItem>
+                                                <MenuItem value={3}><span role="img" aria-label="star">⭐⭐⭐(3) </span></MenuItem>
+                                                <MenuItem value={2}><span role="img" aria-label="star">⭐⭐(2) </span></MenuItem>
+                                                <MenuItem value={1}><span role="img" aria-label="star">⭐(1) </span></MenuItem>
+                                            </TextField>
+                                        );
+                                    } else {
+                                        return(
+                                            <Typography variant="subheading" className="push-down" key={`pizza${index}`}>
+                                                {pizza.name} Rating:&nbsp; 
+                                                <strong>
+                                                {pizza.rating} <span role="img" aria-label="star">⭐</span>
+                                                </strong>
+                                                {
+                                                    pizza.rating <=3 ?                                                    
+                                                        pizza.complaint?
+                                                        <TextField 
+                                                            fullWidth
+                                                            multiline
+                                                            label={`Comment for ${pizza.name}`}
+                                                            disabled
+                                                            rowsMax="2"
+                                                            value={pizza.complaint}
+                                                        />:
+                                                        <div>
+                                                            <TextField 
+                                                                fullWidth
+                                                                multiline
+                                                                label={`Comment for ${pizza.name}`}
+                                                                rowsMax="2"
+                                                                id={`pizzaComplaint-${key}`}
+                                                            />
+                                                            <Button 
+                                                                fullWidth 
+                                                                color="secondary"
+                                                                onClick={
+                                                                    ()=>{
+                                                                        var value = document.getElementById(`pizzaComplaint-${key}`).value;
+                                                                        if(value && value !== ""){
+                                                                            var old = this.state.userData;
+                                                                            old.orders[this.state.selectedIndex].pizzaRatings[key].complaint = value;
+                                                                            this.setState({
+                                                                                userData: old
+                                                                            });
+                                                                            firebase.database().ref(`Orders/${this.state.userData.orderList[this.state.selectedIndex]}/`)
+                                                                            .set(this.state.userData.orders[this.state.selectedIndex])
+                                                                            .then(()=>{
+                                                                                this.notify("We'll let the shop know what went wrong 👍");
+                                                                            }).catch(()=>{
+                                                                                this.notify("Couldn't save your comment, please try again in a bit.");
+                                                                            })
+                                                                        } else {
+                                                                            this.notify("You can't save an empty comment.");
+                                                                        }
+                                                                    }
+                                                                }
+                                                            >
+                                                                <Comment style={{marginRight:'10px'}}/>
+                                                                Save Comment
+                                                            </Button>
+                                                        </div>
+                                                    :null
+                                                }
+                                            </Typography>
+                                        );
+                                    }
+                                })
+                            }  */}
+
+
                          
                         </DialogContent>
                     </div>:
                     <div></div>
                 }
                 </Dialog>
-                <div className="column" data-aos ="flip-up"> 
+
+                 <div className="signup-page" style={{marginTop:'25px',textAlign:'center'}}> 
+                    <Typography className="push-down" color ="inherit" variant="display2">
+                        Your Current Orders  
+                    </Typography>
+                       
+                   <Divider />
+                 </div>
+
+
+
+
+                {/* <div className="column" data-aos ="flip-up"> 
                     <Card  data-aos ="flip-up" style ={cardDescription} >
                         <CardContent>
                             <Typography gutterBottom variant="headline" component= "h2">
@@ -370,7 +562,7 @@ class DeliveryHome extends Component{
                                 </form>
                         </CardContent>
                     </Card>  
-                </div>
+                </div> */}
         </div>
 
         );
