@@ -4,6 +4,9 @@ const functions = require('firebase-functions');
 const admin = require('firebase-admin');
 const cors = require('cors')({origin: true});
 var ptfa = require('./ptfa.json');
+var googleMapsClient = require('@google/maps').createClient({
+    key: 'AIzaSyAyZVH3IJTKen6oYJ8WmUP_BazsTy_AgUg'
+});
 
 admin.initializeApp({
     credential: admin.credential.cert(ptfa),
@@ -173,5 +176,22 @@ exports.ratePizza = functions.https.onRequest((req,res)=>{
         }).catch((err)=>{
             res.status(500).send({done:false,error:err,message:"Couldn't update order's data."});
         })
+    })
+})
+
+exports.mobileGetPlaces = functions.https.onRequest((req,res)=>{
+    return cors(req, res, ()=>{
+        var searchReq = {
+            location: req.body.location,
+            radius: 250,
+            query: 'pizza'
+        };
+        googleMapsClient.places(searchReq, (err, response)=>{
+            if(!err){
+                res.status(200).send(response.json.results);
+            } else {
+                res.status(500).send(err);
+            }
+        });
     })
 })

@@ -4,17 +4,28 @@ import { COLOR, ThemeProvider } from 'react-native-material-ui';
 import Signin from './Components/Signin.js';
 import Signup from './Components/Signup.js';
 import AddShop from './Components/AddShop.js';
-import UserHome from './Components/UserHome.js';
+import CustomerHome from './Components/CustomerHome.js';
+import CustomerCart from './Components/CustomerCart.js';
 import AuthLoading from './Components/AuthLoading.js';
 import * as firebase from 'firebase';
 const UserStack = StackNavigator({
   Home: {
-    screen: UserHome,
+    screen: CustomerHome,
     navigationOptions: {
       title: `Weirdoughs Pizza`,
       headerStyle: {
         backgroundColor: COLOR.blue500,
         display: 'none'
+      },
+      headerTintColor: COLOR.white
+    }
+  },
+  Cart: {
+    screen: CustomerCart,
+    navigationOptions: {
+      title: `Your Cart`,
+      headerStyle: {
+        backgroundColor: COLOR.blue500
       },
       headerTintColor: COLOR.white
     }
