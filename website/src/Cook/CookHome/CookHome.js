@@ -11,9 +11,12 @@ import {Avatar,
         Snackbar,
         Button} from 'material-ui';
 import GridList, { GridListTile, GridListTileBar } from 'material-ui/GridList';
+import { MuiThemeProvider, createMuiTheme } from 'material-ui/styles';
+import blue from 'material-ui/colors/blue';
 import Subheader from 'material-ui/List/ListSubheader';
 import Logout from 'material-ui-icons/ExitToApp';
-import Next from 'material-ui-icons/PlayCircleFilled';
+import Pizza from 'material-ui-icons/LocalPizza';
+import Store from 'material-ui-icons/Store';
 import FileUpload from 'material-ui-icons/CloudUpload';
 
 
@@ -24,9 +27,8 @@ class CookHome extends Component {
             cook: {
                 cookUID: '',
                 cookName: '',
+                shopName: '',
                 profilePicture: '',
-                shopUID: '',
-                pizzaID: '',
                 averageRating: '',
                 DroppedPizzas: '',
                 WarnedCount: '',
@@ -36,7 +38,10 @@ class CookHome extends Component {
             pizza: '',
             cost: '',
             pizzas: [],
+            pizzaID: [],
+            shopUID: '',
             notifyMsg: '',
+            counter: 0,
             notify: false,
             processing: false
 
@@ -48,6 +53,7 @@ class CookHome extends Component {
         this.createPizzaType = this.createPizzaType.bind(this);
         this.handleFileSelect = this.handleFileSelect.bind(this);
         this.retrievePizza = this.retrievePizza.bind(this);
+        this.addPizzaToShop = this.addPizzaToShop.bind(this);
     }
 
     handlePizzaInput(event) {
@@ -57,7 +63,7 @@ class CookHome extends Component {
     }
 
     handleCostInput(event) {
-        const number = /^[0-9\.\-\/]+$/;
+        const number = /^\d*\.?\d{0,2}$/;
         if(event.target.value === '' || number.test(event.target.value)) {
             this.setState({
                 cost: event.target.value
@@ -67,7 +73,9 @@ class CookHome extends Component {
 
     handleFileSelect(event) {
         this.setState({
-            pizzaImg: event.target.files[0]
+            pizzaImg: event.target.files[0],
+            notify: true,
+            notifyMsg:  event.target.files[0].name + " successfully uploaded!"
         })
     }
 
@@ -98,7 +106,7 @@ class CookHome extends Component {
         }
         else {
             var pizzaPicture = document.getElementById("pizzaPicture").files[0];
-            firebase.storage().ref().child('Pizzas/' + pizzaPicture.name).put(pizzaPicture).then(() =>{
+            firebase.storage().ref().child('Pizzas/' + pizzaPicture.name).put(pizzaPicture).then(() => {
                 firebase.storage().ref().child('Pizzas/' + pizzaPicture.name).getDownloadURL().then((url) => {
                     this.setState({
                         pizzaImg: url
@@ -109,11 +117,11 @@ class CookHome extends Component {
                         firebase.database().ref(`Pizzas/${newID}`).set({
                             cook: this.state.cook.cookUID,
                             name: this.state.pizza,
-                            cost: this.state.cost,
+                            cost: Number(this.state.cost),
                             image: url,
                             averageRating: 0,
                             totalOrders: 0
-                        }).then(()=>{
+                        }).then(()=> {
                             firebase.database().ref('Pizzas/total').set(current+1);
                             this.setState({
                                 pizza: '',
@@ -128,27 +136,70 @@ class CookHome extends Component {
                 });
             })
         }
-
     }
 
     retrievePizza() {
         const previousPizza = this.state.pizzas;
-        firebase.database().ref().child('Pizzas').on("child_added", (snapshot) =>{
-            if(snapshot.val().name === undefined)
-            {
-                return false;
+        const previousPizzaID = this.state.pizzaID;
+        firebase.database().ref().child(`Pizzas/`).on("child_added", (snapshot) => {
+            var cookID = snapshot.child(`cook/`).val();
+            if (cookID === null) {
+                return 0;
             }
-            else {
+            else if(cookID === this.state.cook.cookUID) {
                 previousPizza.push({
                     name: snapshot.val().name,
                     image: snapshot.val().image,
                     cost: snapshot.val().cost,
                     averageRating: snapshot.val().averageRating
                 })
+                previousPizzaID.push(snapshot.key);
                 this.setState({
-                    pizzas: previousPizza
+                    pizzas: previousPizza,
+                    pizzaID: previousPizzaID
                 })
             }
+        });
+    }
+    addPizzaToShop() {
+        firebase.database().ref().child(`Users/`).on('value',(snap) => {
+            var shopID = snap.child(`${this.state.cook.cookUID}/shop`).val();
+            this.setState({
+                shopUID: shopID
+            })
+            firebase.database().ref(`Shops/${this.state.shopUID}/pizzas`).once('value', (snap) =>{
+                if(snap.val()) {
+                    var exists = snap.val();
+                      for(var i = 0; i < this.state.pizzaID.length; i++){
+                          var found = 0;
+                          for(var j = 0; j < exists.length; j++){
+                              if(exists[j] === this.state.pizzaID[i]){
+                                  found = 1;
+                                  break;
+                              }
+                          }
+                          if(found === 0){
+                              exists.push(this.state.pizzaID[i]);
+                          }
+                      }
+                      var shopPizzaRef = firebase.database().ref(`Shops/${this.state.shopUID}/pizzas`);
+                      shopPizzaRef.set(exists);
+                      this.setState({
+                          notify: true,
+                          notifyMsg: "Your 🍕 toppings has been added to the shop!"
+                    })
+                  }
+                  else {
+                      firebase.database().ref(`Shops/${this.state.shopUID}/pizzas`).set(this.state.pizzaID);
+                      this.setState({
+                          notify: true,
+                          notifyMsg: "Your 🍕 toppings has been added to the shop!"
+                    })
+                  }
+                  this.setState({
+                      pizzaID: []
+                })
+            })
         });
     }
 
@@ -184,7 +235,7 @@ class CookHome extends Component {
                         src={this.state.cook.profilePicture} />
                         <Typography variant="display2" style={{flex:1}}>
                             Welcome, {this.state.cook.cookName}
-                            <Button style={{float:'right'}} onClick={()=>{firebase.auth().signOut()}}>
+                            <Button style={{float:'right'}} onClick={()=>{firebase.auth().signOut(); window.location.reload()}}>
                             <Logout style ={{marginRight: '5px'}}/> Signout
                             </Button>
                         </Typography>
@@ -229,7 +280,7 @@ class CookHome extends Component {
                                     variant="raised"
                                     color="primary"
                                 >
-                                <Next style={{marginRight: '10px'}} />
+                                <Pizza style={{marginRight: '10px'}} />
                                 Add to Menu
                                 </Button>
                             </CardContent>
@@ -237,9 +288,9 @@ class CookHome extends Component {
                     </div>
                 </Typography>
                 <Divider />
-                    <div style={{marginTop: '10px', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-around', overflow: 'hidden', backgroundColor: '#FFFFFF'}}>
-                        <Subheader style={{fontSize: "20px", color: 'black'}}>Pizza Toppings</Subheader>
-                            <GridList style={{flexWrap: 'nowrap'}} cols={3} cellHeight={180} data-aos ="fade-up">
+                    <div data-aos ="fade-up" style={{marginTop: '10px', display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-start', overflow: 'hidden', backgroundColor: '#FFFFFF'}}>
+                        <Subheader style={{fontSize: "20px", color: 'black', textIndent: '430px'}}>Pizza Toppings </Subheader>
+                            <GridList style={{flexWrap: 'nowrap'}} cols={2.5} data-aos ="fade-up">
                                 {
                                     this.state.pizzas.map((data,index) =>{
                                         return (
@@ -254,6 +305,17 @@ class CookHome extends Component {
                                 })
                             }
                         </GridList>
+                        <MuiThemeProvider theme ={createMuiTheme ({palette: {primary: blue}})}>
+                        <Button
+                            onClick={this.addPizzaToShop}
+                            fullWidth
+                            variant="raised"
+                            color="primary"
+                        >
+                        <Store style={{marginRight: '10px'}} />
+                        Submit Pizza to Shop
+                        </Button>
+                    </MuiThemeProvider>
                     </div>
                     <Snackbar
                     onClose={() => {this.setState({notify:false, notifyMsg: ''})}}
@@ -261,7 +323,6 @@ class CookHome extends Component {
                     message={this.state.notifyMsg}
                     autoHideDuration={2000}
                 />
-            {console.log(this.state.pizzas)}
             </div>
         );
     }
