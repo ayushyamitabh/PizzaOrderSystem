@@ -41,9 +41,7 @@ class CookHome extends Component {
             pizzaID: [],
             shopUID: '',
             notifyMsg: '',
-            counter: 0,
-            notify: false,
-            processing: false
+            notify: false
 
         };
         this.fireBaseListener = null;
@@ -131,7 +129,7 @@ class CookHome extends Component {
                     });
                     this.setState({
                         notify: true,
-                        notifyMsg: "Your 🍕 type has been added to the menu!"
+                        notifyMsg: "Your 🍕 type has been added to your list of 🍕 toppings!"
                     })
                 });
             })
@@ -143,10 +141,7 @@ class CookHome extends Component {
         const previousPizzaID = this.state.pizzaID;
         firebase.database().ref().child(`Pizzas/`).on("child_added", (snapshot) => {
             var cookID = snapshot.child(`cook/`).val();
-            if (cookID === null) {
-                return 0;
-            }
-            else if(cookID === this.state.cook.cookUID) {
+            if(cookID === this.state.cook.cookUID) {
                 previousPizza.push({
                     name: snapshot.val().name,
                     image: snapshot.val().image,
@@ -178,16 +173,20 @@ class CookHome extends Component {
                                   break;
                               }
                           }
+                          this.setState({
+                              notify: true,
+                              notifyMsg: "Opps, apparently your 🍕 toppings are already in the shop."
+                          })
                           if(found === 0){
                               exists.push(this.state.pizzaID[i]);
+                              var shopPizzaRef = firebase.database().ref(`Shops/${this.state.shopUID}/pizzas`);
+                              shopPizzaRef.set(exists);
+                              this.setState({
+                                  notify: true,
+                                  notifyMsg: "Your 🍕 toppings has been added to the shop!"
+                            })
                           }
                       }
-                      var shopPizzaRef = firebase.database().ref(`Shops/${this.state.shopUID}/pizzas`);
-                      shopPizzaRef.set(exists);
-                      this.setState({
-                          notify: true,
-                          notifyMsg: "Your 🍕 toppings has been added to the shop!"
-                    })
                   }
                   else {
                       firebase.database().ref(`Shops/${this.state.shopUID}/pizzas`).set(this.state.pizzaID);
@@ -218,8 +217,16 @@ class CookHome extends Component {
                     }
                 })
             }
+            this.retrievePizza();
+            firebase.database().ref(`Users/${this.state.cook.cookUID}/shop`).on('value',(snapshot) => {
+                var shopID = snapshot.val();
+                firebase.database().ref(`Shops/${shopID}/name`).once('value', (snap) =>{
+                    this.setState({
+                        shopName: snap.val()
+                    })
+                })
+            });
         });
-        this.retrievePizza();
     }
 
     componentWillUnmount() {
@@ -230,21 +237,24 @@ class CookHome extends Component {
     render() {
         return (
             <div style={{padding:'50px 200px'}}>
+                {/*=============WELCOME USER HEADER=============*/}
                 <div className="cook-header">
                     <Avatar className="cook-avatar"
                         src={this.state.cook.profilePicture} />
                         <Typography variant="display2" style={{flex:1}}>
                             Welcome, {this.state.cook.cookName}
-                            <Button style={{float:'right'}} onClick={()=>{firebase.auth().signOut(); window.location.reload()}}>
+                            <Button style={{float:'right'}} onClick={()=>{firebase.auth().signOut();}}>
                             <Logout style ={{marginRight: '5px'}}/> Signout
                             </Button>
                         </Typography>
                 </div>
                 <Divider />
                 <Typography variant="subheading" style={{margin: '10px'}}>
+                    {/*=============PIZZA CREATION SECTION=============*/}
                     <div className="Pizza-creation-content">
                         <Card style={{marginTop: '10px'}} data-aos="slide-up">
-                            <CardHeader title="Create Your Pizzas" subheader="Enter the pizza topping and price to add to the menu"/>
+                            <CardHeader title="Create Your Pizzas"
+                                subheader="Enter the pizza topping, price and picture to add to your list of pizza toppings"/>
                             <CardContent>
                                 <TextField
                                     onChange={this.handlePizzaInput}
@@ -264,7 +274,8 @@ class CookHome extends Component {
                                     fullWidth
                                     className="push-down"
                                 />
-                                <input id="pizzaPicture" type="file" accept="image/*" onChange={this.handleFileSelect} style={{display:'none'}} />
+                                <input id="pizzaPicture" type="file" accept="image/*"
+                                    onChange={this.handleFileSelect} style={{display:'none'}} />
                                 <Button
                                     onClick={()=>{document.getElementById("pizzaPicture").click()}}
                                     fullWidth
@@ -281,49 +292,54 @@ class CookHome extends Component {
                                     color="primary"
                                 >
                                 <Pizza style={{marginRight: '10px'}} />
-                                Add to Menu
+                                Add Pizza
                                 </Button>
                             </CardContent>
                             </Card>
                     </div>
                 </Typography>
                 <Divider />
-                    <div data-aos ="fade-up" style={{marginTop: '10px', display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-start', overflow: 'hidden', backgroundColor: '#FFFFFF'}}>
-                        <Subheader style={{fontSize: "20px", color: 'black', textIndent: '430px'}}>Pizza Toppings </Subheader>
+                    {/*=============VIEW PIZZA TOPPINGS AND DETAILS=============*/}
+                    <div data-aos ="fade-up" data-aos-duration="1500" style={{marginTop: '10px', display: 'flex',
+                        flexWrap: 'wrap', justifyContent: 'flex-start', overflow: 'hidden', backgroundColor: '#FFFFFF'}}>
+                        <Subheader style={{fontSize: "20px", color: 'black', textIndent: '420px'}}>
+                            Your Pizza Toppings
+                        </Subheader>
                             <GridList style={{flexWrap: 'nowrap'}} cols={2.5} data-aos ="fade-up">
-                                {
-                                    this.state.pizzas.map((data,index) =>{
-                                        return (
-                                        <GridListTile key={index}>
-                                            <img src={data.image} alt={data.name} />
-                                            <GridListTileBar
-                                                title={data.name}
-                                                subtitle={`${data.averageRating} ⭐ | $${data.cost}`}
-                                                />
-                                        </GridListTile>
+                            {
+                                this.state.pizzas.map((data,index) =>{
+                                    return (
+                                    <GridListTile key={index}>
+                                        <img src={data.image} alt={data.name} />
+                                        <GridListTileBar
+                                            title={data.name}
+                                            subtitle={`${data.averageRating} ⭐ | $${data.cost}`}
+                                        />
+                                    </GridListTile>
                                     );
                                 })
                             }
                         </GridList>
-                        <MuiThemeProvider theme ={createMuiTheme ({palette: {primary: blue}})}>
-                        <Button
-                            onClick={this.addPizzaToShop}
-                            fullWidth
-                            variant="raised"
-                            color="primary"
-                        >
-                        <Store style={{marginRight: '10px'}} />
-                        Submit Pizza to Shop
-                        </Button>
-                    </MuiThemeProvider>
-                    </div>
-                    <Snackbar
-                    onClose={() => {this.setState({notify:false, notifyMsg: ''})}}
-                    open={this.state.notify}
-                    message={this.state.notifyMsg}
-                    autoHideDuration={2000}
-                />
-            </div>
+                            <MuiThemeProvider theme ={createMuiTheme ({palette: {primary: blue}})}>
+                                <Button
+                                    onClick={this.addPizzaToShop}
+                                    fullWidth
+                                    variant="raised"
+                                    color="primary"
+                                >
+                                <Store style={{marginRight: '10px'}} />
+                                Submit Pizza to {this.state.shopName}
+                            </Button>
+                            </MuiThemeProvider>
+                        </div>
+                        {/*=============NOTIFICATION SNACKBAR=============*/}
+                        <Snackbar
+                            onClose={() => {this.setState({notify:false, notifyMsg: ''})}}
+                            open={this.state.notify}
+                            message={this.state.notifyMsg}
+                            autoHideDuration={2000}
+                            />
+                </div>
         );
     }
 };
