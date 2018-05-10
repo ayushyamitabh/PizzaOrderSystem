@@ -16,6 +16,7 @@ import {Avatar,
         DialogTitle,
         Divider,
         FormControl,
+        Icon,
         IconButton,
         Input,
         InputAdornment,
@@ -36,14 +37,19 @@ import {Avatar,
 import * as GoogleMapsLoader from 'google-maps';
 import {SketchField, Tools} from 'react-sketch';
 //=================== IMPORTED ICONS =========================
+import VIP from 'material-ui-icons/Star';
 import User from 'material-ui-icons/Face';
 import Shop from 'material-ui-icons/Store';
 import Close from 'material-ui-icons/Close';
+import Pay from 'material-ui-icons/Payment';
+import Apply from 'material-ui-icons/Loyalty';
 import Delete from 'material-ui-icons/Delete';
 import Comment from 'material-ui-icons/Comment';
 import Logout from 'material-ui-icons/ExitToApp';
 import Cart from 'material-ui-icons/ShoppingCart';
+import Registered from 'material-ui-icons/Security';
 import Details from 'material-ui-icons/LibraryBooks';
+import Dollar from 'material-ui-icons/MonetizationOn';
 import CheckCircle from 'material-ui-icons/CheckCircle';
 import RemoveCart from 'material-ui-icons/RemoveShoppingCart';
 import AddShoppingCart from 'material-ui-icons/AddShoppingCart';
@@ -110,6 +116,8 @@ export default class CustomerHome extends Component{
         this.notify = this.notify.bind(this);
         this.loadMap = this.loadMap.bind(this);
         this.alert = this.alert.bind(this);
+        this.register = this.register.bind(this);
+        this.placeOrder = this.placeOrder.bind(this);
     }
     componentDidMount() {
         this.authListener();
@@ -589,6 +597,105 @@ export default class CustomerHome extends Component{
             })
         }
     }
+    register(currStatus){
+        this.setState({
+            processing:true
+        })
+        const qData = {
+            uid: this.state.user.uid,
+            gmap_id: this.state.selectedGMAPID,
+            currentStatus: currStatus
+        };
+        axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/registerUserStatus', qData)
+        .then((result)=>{
+            var gotRes = result.data;
+            this.notify(gotRes.message);
+            this.setState({
+                processing:false
+            })
+        })
+        .catch((err)=>{
+            this.notify(err.message);
+            this.setState({
+                processing:false
+            })
+        })
+    }
+    dataURItoBlob(dataURI) {
+        var byteString = atob(dataURI.split(',')[1]);
+        var mimeString = dataURI.split(',')[0].split(':')[1].split(';')[0];
+        var ab = new ArrayBuffer(byteString.length);
+        var ia = new Uint8Array(ab);
+        for (var i = 0; i < byteString.length; i++) {
+            ia[i] = byteString.charCodeAt(i);
+        }
+        return new Blob([ab], {type: mimeString});
+    }
+    placeOrder(){
+        this.setState({processing:true});
+        const payment = {
+            noc: document.getElementById('card-name').value,
+            num: document.getElementById('card-number').value,
+            cvc: document.getElementById('card-cvc').value,
+            doe: document.getElementById('card-date').value,
+            tip: document.getElementById('card-tip').value
+        };
+        if (payment.noc === '' || payment.num === '' || payment.cvc === '' || payment.doe === '' || payment.tip === ''){
+            this.notify("Looks like you're missing something.")
+            this.setState({
+                processing:false
+            })
+        } else {
+            firebase.database().ref('Orders/total').once('value').then((snap)=>{
+                if(snap.val()) {
+                    const TOTAL = snap.val();
+                    firebase.database().ref('Orders/total').set(TOTAL + 1).then(()=>{
+                        const imgDataUrls = this.state.customizedImages;
+                        var imageBlobs = {};
+                        var imageURLs = {};
+                        Object.keys(imgDataUrls).forEach((key, index)=>{
+                            imageBlobs[key] = this.dataURItoBlob(imgDataUrls[key]);
+                        })
+                        Object.keys(imageBlobs).forEach((key, index)=>{
+                            const imgBlb = imageBlobs[key];
+                            var metadata = {
+                                contentType: 'image/jpeg',
+                            };
+                            firebase.storage().ref(`Users/${this.state.user.uid}/order${TOTAL}/${key}.png`).put(imgBlb, metadata)
+                            .then(()=>{
+                                firebase.storage().ref(`Users/${this.state.user.uid}/order${TOTAL}/${key}.png`)
+                                .getDownloadURL()
+                                .then((imgUrl)=>{
+                                    imageURLs[key] = imgUrl;
+                                    if(Object.keys(imageURLs).length === Object.keys(imageBlobs).length){
+                                        const oData = {
+                                            cuid:this.state.user.uid,
+                                            images: imageURLs,
+                                            cart: this.state.userData.cart,
+                                            payment: payment,
+                                            orderNumber: TOTAL
+                                        };
+                                        axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/placeOrder',oData)
+                                        .then((result)=>{
+                                            this.notify(result.data.message);
+                                            firebase.database().ref(`Users/${this.state.user.uid}/cart`).set(null).then(()=>{
+                                                this.setState({processing:false})
+                                                window.location.reload();
+                                            })
+                                        })
+                                        .catch((err)=>{
+                                            this.notify(err.message);
+                                            this.setState({processing:false})
+                                        })                                        
+                                    }
+                                })
+                            })
+                        })
+                    })
+                }
+            })
+        }
+    }
     componentWillUnmount() {
         this.fireBaseListener && this.fireBaseListener();
         this.authListener = undefined;
@@ -612,7 +719,7 @@ export default class CustomerHome extends Component{
                             horizontal:'right'
                         }}
                     >
-                        <div style={{padding:'15px 30px'}}>
+                        <div style={{padding:'15px 30px 30px 30px', maxHeight: '500px'}}>
                             <Typography variant="display1" style={{width:'30vw'}}>Your Cart</Typography>
                             <Typography variant="subheading">Ordering from {this.state.userData.cart.name}</Typography>
                             <Divider />
@@ -657,8 +764,13 @@ export default class CustomerHome extends Component{
                                 }):null
                             }
                             </MenuList>
+                            <Divider />
+                            <Typography variant="subheading" style={{marginTop:10, marginBottom:10}}>
+                                <strong>Total</strong> : ${this.state.userData.cart.total.toFixed(2)}
+                            </Typography>
                             <Button variant="raised" color="secondary" size="small" fullWidth
                                 disabled={this.state.step2complete}
+                                style={{marginBottom:20}}
                                 onClick={()=>{
                                     var old = this.state.userData;
                                     old.cart = null;
@@ -929,7 +1041,7 @@ export default class CustomerHome extends Component{
                             Welcome, {this.state.user.displayName}
                         </Typography>
                         {/*<Button size="small"><User style={{marginRight:'5px'}} />Account</Button>*/}
-                        <Button onClick={()=>{firebase.auth().signOut();}} size="small"><Logout style={{marginRight:'5px'}}/>signout</Button>
+                        <Button disabled={this.state.processing} onClick={()=>{firebase.auth().signOut();}} size="small"><Logout style={{marginRight:'5px'}}/>signout</Button>
                     </div>:
                     null
                 }
@@ -952,6 +1064,7 @@ export default class CustomerHome extends Component{
                             {
                                 this.state.userData.orders?
                                     this.state.userData.orders.map((data, index)=>{
+                                        if (data.status === 'delivered')
                                         return(
                                             <Card key={index} data-aos="fade-left" className="order-card">
                                                 <CardHeader 
@@ -991,6 +1104,41 @@ export default class CustomerHome extends Component{
                                 <Typography variant="subheading" className="no-orders">
                                     {this.state.userData.ordersMesage}
                                 </Typography>
+                            }
+                        </div>
+                        <Divider className="push-down" data-aos="fade-up" />
+                        {/*=============CURRENT ORDERS SECTION=============*/}
+                        <Typography variant="display1" className="push-down" data-aos="fade-up">
+                            Your Current Orders
+                        </Typography>
+                        <Typography variant="subheading" className="push-down">
+                            Track your current orders.
+                        </Typography>
+                        <div className="past-orders" data-aos="fade-up">
+                            {
+                                this.state.userData.orders?
+                                    this.state.userData.orders.map((data, index)=>{
+                                        if (data.status === 'accepted' || data.status === 'ordered')
+                                        return(
+                                            <Card key={index} data-aos="fade-left" className="order-card">
+                                                <CardHeader 
+                                                    title={data.shopName}
+                                                    subheader={`Order # ${this.state.userData.orderList[index]}`}
+                                                    style={{paddingBottom: 0}}
+                                                />
+                                                <CardContent style={{paddingTop: 0}}>
+                                                    <Typography variant="subheading" color="primary">
+                                                        {data.status === 'ordered'? '👨‍🍳 Preparing':'🚴‍ Out For Delivery'}
+                                                    </Typography>
+                                                    <Typography variant="subheading" >
+                                                        <strong>Total: </strong> ${data.total.toFixed(2)}
+                                                    </Typography>
+                                                </CardContent>
+                                            </Card>
+                                        );
+                                    })
+                                :
+                                null
                             }
                         </div>
                         <Divider className="push-down" data-aos="fade-up" />
@@ -1034,6 +1182,58 @@ export default class CustomerHome extends Component{
                                     style={{paddingBottom:0}}
                                 />
                                 <CardContent style={{paddingTop:0}}>
+                                    {/*=============VISITOR, REGISTERED, OR VIP=============*/}
+                                    {   // in registered
+                                        this.state.selectedShop.registered?
+                                            this.state.selectedShop.registered.indexOf(this.state.user.uid) > -1?
+                                            <div style={{display:'flex', flexDirection:'row', alignItems:'center'}}>
+                                                <Icon color='primary' ><Registered /></Icon>
+                                                <Typography color="primary" style={{flex:1}}>
+                                                    You're a Registered Customer!
+                                                </Typography>
+                                                <Button color="primary" size="small" onClick={()=>{this.register('registered')}} >Apply for VIP</Button>
+                                            </div>
+                                            :null
+                                        :null
+                                    }
+                                    {   // in vip
+                                        this.state.selectedShop.vip?
+                                            this.state.selectedShop.vip.indexOf(this.state.user.uid) > -1?
+                                            <div style={{display:'flex', flexDirection:'row', alignItems:'center'}}>
+                                                <Icon color='secondary'><VIP /></Icon>
+                                                <Typography color="secondary">
+                                                    You're a VIP!
+                                                </Typography>
+                                            </div>
+                                            :null
+                                        :null
+                                    }
+                                    { // neither list exists
+                                        !this.state.selectedShop.registered && !this.state.selectedShop.vip?
+                                        <Button fullWidth size="small" onClick={()=>{this.register('visitor')}}><Apply style={{marginRight:7}} />Apply to become a registered customer!</Button>:
+                                        null
+                                    }
+                                    { // both lists exists but in neither
+                                        this.state.selectedShop.registered && this.state.selectedShop.vip?
+                                            this.state.selectedShop.registered.indexOf(this.state.user.uid) < 0 && this.state.selectedShop.vip.indexOf(this.state.user.uid) < 0 ?
+                                                <Button fullWidth size="small" onClick={()=>{this.register('visitor')}}><Apply style={{marginRight:7}} />Apply to become a Registered Customer!</Button>:
+                                                null
+                                        :null
+                                    }
+                                    {   // either registered or vip exists but not in it
+                                        (this.state.selectedShop.registered && !this.state.selectedShop.vip) || (!this.state.selectedShop.registered && this.state.selectedShop.vip)?
+                                            this.state.selectedShop.registered && !this.state.selectedShop.vip?
+                                                this.state.selectedShop.registered.indexOf(this.state.user.uid) < 0?
+                                                <Button fullWidth size="small" onClick={()=>{this.register('visitor')}}><Apply style={{marginRight:7}} />Apply to become a registered customer!</Button>:
+                                                null
+                                            :
+                                            !this.state.selectedShop.registered && this.state.selectedShop.vip?
+                                                this.state.selectedShop.vip.indexOf(this.state.user.uid) < 0?
+                                                <Button fullWidth size="small" onClick={()=>{this.register('visitor')}}><Apply style={{marginRight:7}} />Apply to become a registered customer!</Button>:
+                                                null
+                                            :null
+                                        :null
+                                    }
                                     <Divider className="push-down"/>
                                     {
                                         this.state.selectedShop.pizzas?
@@ -1051,10 +1251,10 @@ export default class CustomerHome extends Component{
                                                             <CardHeader
                                                                 title={data.name}
                                                                 subheader={`${data.averageRating} ⭐ | $${data.cost}`}
-                                                                style={{paddingBottom:0}}
+                                                                style={{paddingBottom:0, height: 100, maxHeight: 100}}
                                                             />
-                                                            <CardContent style={{paddingTop:0}}>
-                                                                <FormControl>
+                                                            <CardContent style={{paddingTop:0, display: 'flex', flexDirection: 'column'}}>
+                                                                <FormControl style={{flex:1}}>
                                                                     <InputLabel htmlFor={`pizzaItem-${index}`}>Quantity</InputLabel>
                                                                     <Input
                                                                         disabled={this.state.step3complete}
@@ -1087,7 +1287,7 @@ export default class CustomerHome extends Component{
                             <Button fullWidth variant="raised" color="secondary" 
                                 disabled={this.state.customizeCompleted?true:false}
                                 onClick={()=>{
-                                    var toSet = new Array(Object.keys(this.state.userData.cart).length);
+                                    var toSet = new Array(Object.keys(this.state.userData.cart.items).length);
                                     toSet.fill(false);
                                     this.setState({step2complete:true,customizeCompleted:toSet})
                                 }}>
@@ -1209,8 +1409,9 @@ export default class CustomerHome extends Component{
                                                                         old[index] = true;
                                                                         this[`sketch${index}`].crossOrigin = "Anonymous";
                                                                         var customImages = this.state.customizedImages;
-                                                                        if(customImages) customImages[key] = this[`sketch${index}`].toDataURL('image/jpeg');
-                                                                        else customImages = {[key]:this[`sketch${index}`].toDataURL('image/jpeg')};
+                                                                        var imgurl = this[`sketch${index}`].toDataURL('image/jpeg');
+                                                                        if(customImages) customImages[key] = imgurl;
+                                                                        else customImages = {[key]:imgurl};
                                                                         this.setState({
                                                                             customizeCompleted: old,
                                                                             customizeStep: this.state.customizeStep + 1,
@@ -1221,7 +1422,7 @@ export default class CustomerHome extends Component{
                                                                 </Button>
                                                             </div>:
                                                             <div>
-                                                                <img src={this.state.customizedImages[key]} style={{width:300,height:300,border:'1px solid black',margin:'0 auto'}}/>
+                                                                <img src={this.state.customizedImages ? this.state.customizedImages[key] : null} style={{width:300,height:300,border:'1px solid black',margin:'0 auto'}}/>
                                                                 <Typography variant="caption">Saved</Typography>
                                                                 <Button 
                                                                     fullWidth 
@@ -1257,24 +1458,6 @@ export default class CustomerHome extends Component{
                                                     }}>
                                                     Back
                                                 </Button>
-                                                {
-                                                    this.state.customizeCompleted && this.state.customizeStep >= Object.keys(this.state.userData.cart.items).length?
-                                                    <Button 
-                                                        disabled={this.state.step3complete}
-                                                        variant="raised"
-                                                        fullWidth 
-                                                        color="primary" 
-                                                        size="small"
-                                                        onClick={()=>{
-                                                            this.setState({
-                                                                step3complete: true
-                                                            })
-                                                        }}
-                                                    > 
-                                                        Continue to Payment
-                                                    </Button>:
-                                                    null
-                                                }
                                             </div>
                                         :null
                                     }
@@ -1282,7 +1465,126 @@ export default class CustomerHome extends Component{
                             </Card>:
                             null
                         }
+                        {
+                            this.state.customizeCompleted && this.state.customizeStep >= Object.keys(this.state.userData.cart.items).length?
+                            <Button 
+                                disabled={this.state.step3complete}
+                                variant="raised"
+                                fullWidth 
+                                color="primary" 
+                                size="small"
+                                onClick={()=>{
+                                    this.setState({
+                                        step3complete: true
+                                    })
+                                }}
+                            > 
+                                Continue to Payment
+                            </Button>:
+                            null
+                        }
                         {/*=============PAYMENT AND PLACE ORDER=============*/}
+                        {
+                            this.state.step3complete?
+                            <Card data-aos="slide-up" data-aos-offset="10" data-aos-once={true}>
+                                <CardHeader 
+                                    title="Payment & Complete"
+                                    subheader="💳 Pay and place your order..."
+                                    style={{paddingBottom:0}}
+                                />
+                                <CardContent style={{paddingTop:0}}>
+                                    <TextField 
+                                        style={{marginTop:10}}
+                                        disabled={this.state.processing}
+                                        label="Name on Card"
+                                        id="card-name"
+                                        required
+                                        fullWidth
+                                    />
+                                    <div style={{display:'flex', flexDirection:'row', width:'100%'}}>
+                                        <TextField 
+                                            style={{marginTop:10, flex: 1}}
+                                            disabled={this.state.processing}
+                                            label="Card Number"
+                                            type="number"
+                                            id="card-number"
+                                            maxLength={12}
+                                            required
+                                        />
+                                        <TextField 
+                                            style={{marginTop:10}}
+                                            disabled={this.state.processing}
+                                            label="CVC"
+                                            id="card-cvc"
+                                            type="number"
+                                            maxLength={3}
+                                            required
+                                        />
+                                    </div>
+                                    <TextField
+                                        style={{marginTop:10}}
+                                        disabled={this.state.processing}
+                                        id="card-date"
+                                        label="Expiry Date"
+                                        type="date"
+                                        fullWidth
+                                        InputLabelProps={{
+                                            shrink: true,
+                                        }}
+                                    />                                    
+                                    <div style={{display:'flex', flexDirection:'row', width:'100%'}}>
+                                        <TextField 
+                                            style={{marginTop:10, flex:1}}
+                                            disabled={this.state.processing}
+                                            label="Total"
+                                            id="card-total"
+                                            type="number"
+                                            maxLength={3}
+                                            required
+                                            value={this.state.userData.cart.total.toFixed(2)}
+                                            InputProps={{
+                                                startAdornment: (
+                                                <InputAdornment position="start">
+                                                    <Dollar />
+                                                </InputAdornment>
+                                                )
+                                            }}
+                                        />
+                                        <TextField 
+                                            style={{marginTop:10, flex:1}}
+                                            disabled={this.state.processing}
+                                            label="Tip"
+                                            id="card-tip"
+                                            type="number"
+                                            maxLength={3}
+                                            required
+                                            InputProps={{
+                                                startAdornment: (
+                                                <InputAdornment position="start">
+                                                    <Dollar />
+                                                </InputAdornment>
+                                                )
+                                            }}
+                                        />
+                                    </div>
+                                </CardContent>
+                            </Card>:null
+                        }
+                        {
+                            this.state.step3complete?
+                            <Button 
+                                disabled={this.state.processing}
+                                fullWidth 
+                                variant="raised" 
+                                color="primary" 
+                                onClick={()=>{this.placeOrder()}} 
+                                data-aos="slide-up" 
+                                data-aos-offset="10" 
+                                data-aos-once={true}> 
+                                <Pay style={{marginRight:10}}/>Place Order
+                            </Button>
+                            :null
+                        }
                     </div>:
                     null
                 }

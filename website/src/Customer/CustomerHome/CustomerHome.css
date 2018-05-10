@@ -61,9 +61,6 @@
     max-width: 100%;
 }
 .tools{
-    width: 100%;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
 }
 #pizza-bckg-cont{
     width: 300px;
@@ -77,6 +74,9 @@
 }
 @media only screen and (max-width: 768px){
     .tools{
+        width: 100%;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
         max-width: 90% !important;
     }
     .tools .hint{
@@ -110,6 +110,9 @@
         z-index: 200;
     }
     .tools{
+        width: 100%;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
         max-width: 90% !important;
         margin-right: 100px !important;
     }

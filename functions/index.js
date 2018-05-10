@@ -10,7 +10,7 @@ var googleMapsClient = require('@google/maps').createClient({
 
 admin.initializeApp({
     credential: admin.credential.cert(ptfa),
-    databaseURL: "https://pos-tagmhaxt.firebaseio.com"
+    databaseURL: "https://pos-tagmhaxt.firebaseio.com",
 });
 
 exports.addShop = functions.https.onRequest((req, res)=>{
@@ -193,5 +193,136 @@ exports.mobileGetPlaces = functions.https.onRequest((req,res)=>{
                 res.status(500).send(err);
             }
         });
+    })
+})
+
+exports.registerUserStatus = functions.https.onRequest((req, res)=>{
+    return cors(req, res, ()=>{
+        var rData = req.body;
+        admin.database().ref('Shops')
+        .orderByChild('gmap_id')
+        .equalTo(rData.gmap_id)
+        .once('value')
+        .then((snap)=>{
+            admin.database().ref('Shops').orderByChild('gmap_id').equalTo(rData.gmap_id).once('value').then((snap)=>{
+                var shopData = snap.val();
+                var shopUID = Object.keys(shopData)[0];
+                var shop = shopData[shopUID];
+                admin.database().ref(`Users/${rData.uid}/shops`).once('value').then((snap)=>{
+                    if (snap.val()){
+                        var old = snap.val();
+                        if (old.indexOf(shopUID)<0) {
+                            old.push(shopUID);
+                            admin.database().ref(`Users/${rData.uid}/shops`).set(old);
+                        }
+                    } else {
+                        admin.database().ref(`Users/${rData.uid}/shops`).set([shopUID]);
+                    }
+                })
+                if (rData.currentStatus === 'visitor'){
+                    if (shop.registeredRequests){
+                        if (shop.registeredRequests.indexOf(rData.uid) >= 0){
+                            res.status(200).send({message:"You've already applied, your status will be updated soon."});
+                        } else {
+                            shop.registeredRequests.push(rData.uid);
+                            admin.database().ref(`Shops/${shopUID}`).set(shop).then(()=>{
+                                res.status(200).send({message:'Sent your application! 😊'});
+                            })
+                        }
+                    } else {
+                        shop.registeredRequests = [rData.uid];
+                        admin.database().ref(`Shops/${shopUID}`).set(shop).then(()=>{
+                            res.status(200).send({message:'Sent your application! 😊'});
+                        })
+                    }
+                } else if (rData.currentStatus === 'registered'){
+                    if (shop.vipRequests) {
+                        if (shop.vipRequests.indexOf(rData.uid)>= 0){
+                            res.status(200).send({message:"You've already applied, your status will be updated soon."});
+                        } else {
+                            shop.vipRequests.push(rData.uid);
+                            admin.database().ref(`Shops/${shopUID}`).set(shop).then(()=>{
+                                res.status(200).send({message:'Sent your application! 😊'});
+                            })
+                        }
+                    } else {
+                        shop.vipRequests = [rData.uid];
+                        admin.database().ref(`Shops/${shopUID}`).set(shop).then(()=>{
+                            res.status(200).send({message:'Sent your application! 😊'});
+                        })
+                    }
+                }
+            })
+            .catch((err)=>{
+                res.status(500).send({message:"Couldn't apply right now 😟"});
+            })
+        })
+    })
+})
+
+exports.placeOrder = functions.https.onRequest((req,res)=>{
+    return cors(req, res, ()=>{
+        admin.database().ref('Shops')
+        .orderByChild('gmap_id')
+        .equalTo(req.body.cart.gmap_id)
+        .once('value')
+        .then((snap)=>{
+            if (snap.val()) {
+                const SHOPS = snap.val();
+                const SHOP_UID = Object.keys(SHOPS)[0];
+                const SHOP_DATA = SHOPS[SHOP_UID];
+
+                var PIZZA_RATINGS = {};
+                Object.keys(req.body.cart.items).forEach((key, index)=>{
+                    const TEMP_PIZZA = {
+                        name: req.body.cart.items[key].name,
+                        rating: 0,
+                        drawing: req.body.images[key]?req.body.images[key]:null
+                    };
+                    PIZZA_RATINGS[key] = TEMP_PIZZA;
+                });
+
+                const ORDER_DATA = {
+                    cuid: req.body.cuid,
+                    customerRating: 0,
+                    delivererRating: 0,
+                    oid: `order${req.body.orderNumber}`,
+                    pizzaRatings: PIZZA_RATINGS,
+                    status: 'ordered',
+                    total: req.body.cart.total,
+                    shopName: req.body.cart.name,
+                    shop: SHOP_UID,
+                    payment: req.body.payment
+                };
+                
+                admin.database().ref(`Orders/orderID${req.body.orderNumber}`)
+                .set(ORDER_DATA)
+                .then(()=>{
+                    if (SHOP_DATA.orders) {
+                        SHOP_DATA.orders.push(`orderID${req.body.orderNumber}`);
+                    } else {
+                        SHOP_DATA.orders = [`orderID${req.body.orderNumber}`];
+                    }
+                    admin.database().ref(`Shops/${SHOP_UID}/orders`).set(SHOP_DATA.orders).then(()=>{
+                        admin.database().ref(`Users/${req.body.cuid}/orders`).once('value').then((snap)=>{
+                            if(snap.val()){
+                                var USER_ORDERS = snap.val();
+                                USER_ORDERS.push(`orderID${req.body.orderNumber}`);
+                                admin.database().ref(`Users/${req.body.cuid}/orders`).set(USER_ORDERS).then(()=>{
+                                    res.status(200).send({message:"Successfully placed your order"});
+                                })
+                            } else {
+                                admin.database().ref(`Users/${req.body.cuid}/orders`).set([`orderID${req.body.orderNumber}`]).then(()=>{
+                                    res.status(200).send({message:"Successfully placed your order"});
+                                })
+                            }
+                        })
+                    })
+                })
+                .catch((err)=>{
+                    res.status(500).send({error:err,message:"Couldn't place your order - please try again in a moment."});
+                })
+            }
+        })
     })
 })
