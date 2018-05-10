@@ -72,9 +72,10 @@ export default class Signup extends Component{
                 return false;
             }
             if (this.state.userType === 'customer') {
-                if (this.state.customerVariant === '' || this.state.customerVariant === null){
+                // changed how status is handled dont need this.
+                /*if (this.state.customerVariant === '' || this.state.customerVariant === null){
                     return false;
-                }
+                }*/
             } else if (this.state.userType === 'cook' || this.state.userType === 'manager' || this.state.userType === 'deliverer') {
                 if (this.state.selectedShop === '' || this.state.selectedShop === null){
                     return false;
@@ -103,7 +104,7 @@ export default class Signup extends Component{
                                     if (this.state.userType === 'manager') {
                                         var modifiedList = {};
                                         Object.keys(shopList).forEach((key, index)=>{
-                                            if (!("manager" in shopList[key])) {
+                                            if (!shopList[key].manager) {
                                                 modifiedList[key] = shopList[key];
                                             }
                                         })
@@ -147,7 +148,7 @@ export default class Signup extends Component{
         }
     }
     finalizeUser(){
-        if (this.state.customerVariant === '' && this.state.selectedShop === ''){
+        if (this.state.selectedShop === ''){
             this.setState({
                 notify: true,
                 notifyMsg: "Looks like you're missing stuff."
@@ -243,7 +244,7 @@ export default class Signup extends Component{
                 type: this.state.userType
             };
             if (this.state.userType === 'customer'){
-                setData.variant = this.state.customerVariant;
+                // changed variant handling : setData.variant = this.state.customerVariant;
             } else {
                 setData.shop = this.state.selectedShop;
             }
@@ -434,21 +435,7 @@ export default class Signup extends Component{
                                     </Button>
                                     {
                                         this.state.userType === 'customer' ?
-                                        <FormControl fullWidth className="push-down">
-                                            <InputLabel htmlFor="customer-type">Customer Type</InputLabel>
-                                            <Select 
-                                                disabled={this.state.step2complete || this.state.processing}
-                                                value={this.state.customerVariant}
-                                                onChange={this.handleChange('customerVariant')}
-                                                inputProps={{
-                                                    id: 'customer-type',
-                                                }}
-                                            >
-                                                <MenuItem value=''>None</MenuItem>
-                                                <MenuItem value='visitor'>Visitor</MenuItem>
-                                                <MenuItem value='registered'>Registered (Needs Verification)</MenuItem>
-                                            </Select>
-                                        </FormControl>:
+                                        null:
                                         <FormControl fullWidth className="push-down">                                                
                                             <InputLabel htmlFor="selected-shop">Select Shop</InputLabel>
                                             <Select 

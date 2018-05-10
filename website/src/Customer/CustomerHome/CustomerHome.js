@@ -650,7 +650,7 @@ export default class CustomerHome extends Component{
                 if(snap.val()) {
                     const TOTAL = snap.val();
                     firebase.database().ref('Orders/total').set(TOTAL + 1).then(()=>{
-                        const imgDataUrls = this.state.customizedImages;
+                        const imgDataUrls = this.state.customizedImages? this.state.customizedImages:{};
                         var imageBlobs = {};
                         var imageURLs = {};
                         Object.keys(imgDataUrls).forEach((key, index)=>{
@@ -1242,7 +1242,7 @@ export default class CustomerHome extends Component{
                                                 this.state.selectedShop.pizzas?
                                                 this.state.selectedShop.pizzas.map((data, index)=>{
                                                     return(
-                                                        <Card key={`pizza${index}`} style={{minWidth:'200px',marginRight:'10px'}}>
+                                                        <Card key={`pizza${index}`} style={{minWidth:'200px',marginRight:'10px', maxWidth:'300px', width: '300px'}}>
                                                             <CardMedia
                                                                 style={{height:'100px'}}
                                                                 image={data.image}
