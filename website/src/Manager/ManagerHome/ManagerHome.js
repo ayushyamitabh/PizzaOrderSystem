@@ -19,6 +19,7 @@ class ManagerHome extends Component{
                 profilePicture:'',
                 uid: ''
             },
+            workers: [],
             showDetails:false,
             selectedIndex: null,
             processing: false,
@@ -29,7 +30,31 @@ class ManagerHome extends Component{
         };
         this.fireBaseListener = null;
         this.authListener = this.authListener.bind(this);
+        this.getCookDeliverer = this.getCookDeliverer.bind(this);
     }
+
+    getCookDeliverer() {
+        var previousWorkers = this.state.workers;
+        firebase.database().ref().child(`Users/`).on('value',(snap) => {
+            var shopID = snap.child(`${this.state.user.uid}/shop`).val();
+            firebase.database().ref(`Shops/${shopID}/cook`).on('value', (snap) => {
+                // previousWorkers.push({
+                //     cookID: snap.val()
+                // })
+                firebase.database().ref(`Shops/${shopID}/deliverer`).on('value', (snapshot) => {
+                    previousWorkers.push({
+                        cookID: snap.val(),
+                        managerID: snapshot.val()
+                    })
+                    this.setState({
+                        workers: previousWorkers
+                    })
+                })
+            })
+        });
+        console.log(this.state.workers);
+    }
+
 
 
     componentDidMount(){
@@ -53,10 +78,11 @@ class ManagerHome extends Component{
                                 uid: user.uid
                             }
                         })
+                        this.getCookDeliverer();
                     })
-            }
-        })
-    }
+                }
+            })
+        }
 
         render() {
             return(
