@@ -8,6 +8,7 @@ import Home from './Home/Home.js';
 import Signup from './Home/Signup/Signup.js';
 import AddShop from './Home/AddShop/AddShop.js';
 import NotFound from './Home/NotFound/NotFound.js';
+import GuestRoutes from './Guest/GuestRoutes.js';
 import * as firebase from 'firebase';
 
 class App extends Component {
@@ -34,6 +35,7 @@ class App extends Component {
                         }
                     })
                 }
+                window.location.reload();
             }
             this.setState({
                 lastLocation: loc.pathname
@@ -96,6 +98,7 @@ class App extends Component {
                     <Route path="/deliverer" component={DeliveryRoutes} />
                     <Route path="/cook" component={CookRoutes} />
                     <Route path="/customer" component={CustomerRoutes} />
+                    <Route path="/guest" component={GuestRoutes} />
                     <Route component={NotFound} />
                 </Switch>
                 </div>

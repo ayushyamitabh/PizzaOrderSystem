@@ -164,8 +164,22 @@ exports.ratePizza = functions.https.onRequest((req,res)=>{
                     } else {
                         pizzaData.lastThreeRatings =[odata.pizzaRatings[pid].rating];
                     }
-                    admin.database().ref(`Pizzas/${pid}`).set(pizzaData).then(()=>{
-                        res.status(200).send({done:true,message:"Updated pizza's rating 😊"});
+                    admin.database().ref(`Pizzas/${pid}`).set(pizzaData).then(()=>{                        
+                        if (pizzaRatings.lastThreeRatings.length >= 3) {
+                            var SUB_PAR_COUNT = 0;
+                            pizzaRatings.lastThreeRatings.forEach((data, index) => {
+                                if (data < 3) {
+                                    SUB_PAR_COUNT += 1;
+                                }
+                            });
+                            if (SUB_PAR_COUNT >= 3){
+                                admin.database().ref(`Pizzas/${pid}`).set(null).then(()=>{
+                                    res.status(200).send({done:true,message:"Updated pizza's rating 😊"});
+                                })
+                            } else {
+                                res.status(200).send({done:true,message:"Updated pizza's rating 😊"});
+                            }
+                        }
                     }).catch((err)=>{
                         res.status(500).send({done:false,error:err,message:"Couldn't update pizza's data."});
                     })
@@ -175,6 +189,36 @@ exports.ratePizza = functions.https.onRequest((req,res)=>{
             })
         }).catch((err)=>{
             res.status(500).send({done:false,error:err,message:"Couldn't update order's data."});
+        })
+    })
+})
+
+exports.rateCustomer = functions.https.onRequest((req, res)=>{
+    return cors(req, res, ()=>{
+        admin.database().ref(`Users/${req.body.uid}`).once('value').then((snap)=>{
+            const USER_DATA = snap.val();
+            if (USER_DATA) {
+                if (USER_DATA.averageRating) {
+                    var a = USER_DATA.averageRating * USER_DATA.totalRatings;
+                    var b = USER_DATA.averageRating + req.body.rating;
+                    USER_DATA.totalRatings += 1;
+                    USER_DATA.averageRating = b / USER_DATA.totalRatings;
+                } else {
+                    USER_DATA.averageRating = req.body.rating;
+                    USER_DATA.totalRatings = 1;
+                }
+                admin.database().ref(`Users/${req.body.uid}`).set(USER_DATA).then(()=>{
+                    admin.database().ref(`Orders/${req.body.oid}/customerRating`).set(req.body.rating).then(()=>{
+                        res.status(200).send({message:"Successfully updated customer's rating 😊"});
+                    }).catch((err)=>{
+                        res.status(500).send(err);
+                    })
+                }).catch((err)=>{
+                    res.status(500).send(err);
+                })
+            }
+        }).catch((err)=>{
+            res.status(500).send(err);
         })
     })
 })

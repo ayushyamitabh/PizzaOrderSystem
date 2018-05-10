@@ -148,7 +148,7 @@ export default class Signup extends Component{
         }
     }
     finalizeUser(){
-        if (this.state.selectedShop === ''){
+        if (this.state.userType!=='customer' && this.state.selectedShop === ''){
             this.setState({
                 notify: true,
                 notifyMsg: "Looks like you're missing stuff."

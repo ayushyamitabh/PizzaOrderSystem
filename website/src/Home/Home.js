@@ -175,6 +175,7 @@ class Home extends Component {
                                     }}
                                 />
                                 <Button 
+                                    style={{marginTop:5, marginBottom: 5}}
                                     disabled={this.state.processing}
                                     variant="raised" 
                                     color="primary" 
@@ -184,11 +185,13 @@ class Home extends Component {
                                     Sign-In
                                 </Button>
                                 <Typography 
+                                    style={{marginTop:5, marginBottom: 5}}
                                     variant="subheading" 
                                     className="signup-line">
                                     Don't have an account? Signup now!
                                 </Typography>
                                 <Button 
+                                    style={{marginTop:5, marginBottom: 5}}
                                     disabled={this.state.processing}
                                     variant="raised" 
                                     color="secondary" 
@@ -197,8 +200,17 @@ class Home extends Component {
                                     component={Link} to="/sign-up">
                                     Sign-Up
                                 </Button>
-                                <Divider
-                                    style={{marginTop:'10px'}}/>
+                                <Button 
+                                    style={{marginTop:5, marginBottom: 5}}
+                                    color="primary"
+                                    disabled={this.state.processing}
+                                    fullWidth 
+                                    className="login"
+                                    component={Link} to="/guest"
+                                >
+                                   Continue as guest
+                                </Button>
+                                <Divider style={{marginTop:5, marginBottom: 5}}/>
                                 <Button 
                                     disabled={this.state.processing}
                                     fullWidth 

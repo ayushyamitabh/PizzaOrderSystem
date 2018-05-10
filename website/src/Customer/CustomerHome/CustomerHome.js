@@ -801,7 +801,7 @@ export default class CustomerHome extends Component{
                         <Cart />
                     </Button>
                     :null
-                }                
+                }
                 {/*=============TOP PAGE LOADING BAR=============*/}
                 <div className="top-loading">
                     {
@@ -816,7 +816,7 @@ export default class CustomerHome extends Component{
                     message={this.state.notifyMessage}
                     autoHideDuration={2000}
                 />
-                {/*=============EMPTY CONFIRMATION DIALOG=============*/}
+                {/*=============CONFIRMATION DIALOG=============*/}
                 <Dialog
                     onClose={()=>{
                         this.setState({
@@ -873,11 +873,7 @@ export default class CustomerHome extends Component{
                     disableEscapeKeyDown={true}>
                 {
                     this.state.showDetails ?
-                    <div>                        
-                    {
-                        this.state.processing?
-                        <LinearProgress />:null
-                    }
+                    <div>
                         <DialogTitle
                             children={
                                 <span>
