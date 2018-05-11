@@ -320,7 +320,7 @@ class DeliveryHome extends Component{
                                             </Card>
                                 );
                           }
-                         else if(this.state.userData.orders[index].status === 'accepted'){
+                         else if(this.state.userData.orders[index].status === 'ordered'){
                             console.log(this.state.userData.orders[index].status);
                             return(
                                 <div className="signup-page" style={{marginTop:'25px',textAlign:'center'}}> 
@@ -464,30 +464,7 @@ class DeliveryHome extends Component{
                 }
                 </Dialog>
 
-                 <div className="signup-page" style={{marginTop:'25px',textAlign:'center'}}> 
-                    <Typography className="push-down" color ="inherit" variant="display2">
-                        Your Current Orders  
-                    </Typography>
-                       
-                   <Divider />
-                 </div>
-
-
-
-
-                {/* <div className="column" data-aos ="flip-up"> 
-                    <Card  data-aos ="flip-up" style ={cardDescription} >
-                        <CardContent>
-                            <Typography gutterBottom variant="headline" component= "h2">
-                                Rater Name
-                            </Typography>
-                                <form onSubmit={this.handleSubmit}>
-                                    <input name="comment" value = {this.state.comment} onChange={this.handleChange} placeholder ="Write A Comment" />
-                                        <Button type ="submit" style={{marginLeft:'10px'}}variant ="raised" color ="secondary" >Add Rating</Button>
-                                </form>
-                        </CardContent>
-                    </Card>  
-                </div> */}
+                
         </div>
 
         );
