@@ -241,7 +241,8 @@ export default class Signup extends Component{
             })
             var setData = {
                 id_pic: this.state.idPic,
-                type: this.state.userType
+                type: this.state.userType,
+                name: this.state.name
             };
             if (this.state.userType === 'customer'){
                 // changed variant handling : setData.variant = this.state.customerVariant;
