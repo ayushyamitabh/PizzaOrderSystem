@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import './DeliveryHome.css';
-import { BrowserRouter as Router,Redirect, Route, Switch,Link} from 'react-router-dom';
+
 import * as firebase from 'firebase'
 import {Avatar,
         Button,
@@ -14,22 +14,14 @@ import {Avatar,
         DialogContent,
         DialogContentText,
         IconButton, 
-        InputAdornment,
-        LinearProgress, 
-        List,
-        ListItem,
-        ListItemText,
-        MenuItem,
-        Snackbar, 
+        MenuItem, 
         TextField, 
         Typography } from 'material-ui';
-import MenuIcon from 'material-ui-icons/Menu';
 import Logout from 'material-ui-icons/ExitToApp';
 import User from 'material-ui-icons/Face';
 import Details from 'material-ui-icons/LibraryBooks';
 import axios from 'axios';
 import Close from 'material-ui-icons/Close';
-import Comment from 'material-ui-icons/Comment';
 
 class DeliveryHome extends Component{
   constructor(props) {
@@ -66,7 +58,8 @@ class DeliveryHome extends Component{
             notifyMessage: '',
             step1complete: false,
             selectedShop: null,
-            busy: false,
+            orderID: [],
+            customerRating:''
             
         };
         this.fireBaseListener = null;
@@ -75,7 +68,9 @@ class DeliveryHome extends Component{
         this.hideDetails = this.hideDetails.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
-        this.updateCustomer = this.updateCustomer.bind(this);
+       
+        this.addRating = this.addRating.bind(this);
+        this.updateCustomer2=this.updateCustomer2.bind(this);
   }
     
     handleChange(e) {
@@ -99,8 +94,23 @@ class DeliveryHome extends Component{
          
   }
    
-    componentDidMount(){
+  addRating(){
+        var previousOrderID = this.state.orderID;
+      firebase.database().ref().child(`Users`).on('value', (snap)=>{
+        const delivererID = snap.child(`${this.state.user.cuid}/orders`).val();
+        previousOrderID.push(delivererID);
+        this.setState ({
+            orderID: previousOrderID
+        })
+        console.log(this.state.orderID);
+
+      });
+  }
+
+    componentDidMount() {
        this.authListener();
+       this.addRating();
+
     }
     
     componentWillUnmount(){
@@ -117,7 +127,7 @@ class DeliveryHome extends Component{
                             user: {
                                 displayName: user.displayName,
                                 profilePicture: user.photoURL,
-                                uid: user.uid
+                                cuid: user.uid
                             },
                             userData : {
                                 variant: snap.val().type,
@@ -161,25 +171,44 @@ class DeliveryHome extends Component{
             }
         });
     }
+
+
     
-    updateCustomer(index){      
-        const uid = this.state.userData.orders[index].uid;
-        firebase.database().ref(`Users/${uid}`).once('value').then ((snap) =>{
-            if(snap.val()){
-                var customerData = snap.val();
-                var a = customerData.averageRating * customerData.ratingCount;
-                var b = a + this.state.userData.orders[index].customerRating;
-                var c = b / (customerData.ratingCount +1);
-                customerData.averageRating = c;
-                customerData.ratingCount +=1;
-                firebase.database().ref(`Users/$(uid)`).set(customerData).then (()=>{           firebase.database().ref(`Orders/${this.state.userData.orderList[index]}`).set(this.state.userData.orders[index]).then(()=>{
-                        this.setState({
-                            processing:false                
-                        })
-                    })
-                })
-            }                                                         
+    // updateCustomer(index){      
+    //     const uid = this.state.userData.orders[index].uid;
+    //     firebase.database().ref(`Users/${uid}`).once('value').then ((snap) =>{
+    //         if(snap.val()){
+    //             var customerData = snap.val();
+    //             var a = customerData.averageRating * customerData.ratingCount;
+    //             var b = a + this.state.userData.orders[index].customerRating;
+    //             var c = b / (customerData.ratingCount +1);
+    //             customerData.averageRating = c;
+    //             customerData.ratingCount +=1;
+    //             firebase.database().ref(`Users/$(uid)`).set(customerData).then (()=>{firebase.database().ref(`Orders/${this.state.userData.orderList[index]}`).set(this.state.userData.orders[index]).then(()=>{
+    //                     this.setState({
+    //                         processing:false                
+    //                     })
+    //                 })
+    //             })
+    //         }                                                         
+    //     })
+    // }
+
+    updateCustomer2(index){
+        const object = {
+            cuid: this.state.userData.orders[index].cuid,
+            oid: this.state.userData.orderList[index],
+            rating: this.state.userData.orders[index].customerRating,
+        };
+        axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/rateCustomer',object)
+        .then((completed)=>{
+            this.notify(completed.data.message);
+            this.setState({processing:false})
+        }).catch((err)=>{
+            this.notify(err.message);
+            this.setState({processing:false})
         })
+        console.log(this.state.userData.orders[index].cuid);
     }
     
     showDetails(index){
@@ -197,12 +226,18 @@ class DeliveryHome extends Component{
     }
    
     render() {
+<<<<<<< HEAD
         const cardDescription = {
         maxWidth: 345,
         border: '5px solid black',      
 };
                          {/*=============DELIVERER HOME PAGE=============*/}
+=======
+    
+        
+>>>>>>> 0ce8bb262c4c77b62fc43dcc638c948fa3ff6378
         return ( 
+            // Welcome Title
             <div style={{padding:'50px 100px'}}>
                 <div className="signup-page"> 
                     <div className="customer-header" data-aos = "fade-up">
@@ -221,7 +256,8 @@ class DeliveryHome extends Component{
                 </div>
 
           
-            
+            {/* Past Orders */}
+
                 <div style={{marginTop:'25px',textAlign:'center'}}>
                         <Typography variant="display1" className="push-down" color ="inherit" data-aos ="fade-up">
                             Your Past Orders 
@@ -239,7 +275,9 @@ class DeliveryHome extends Component{
                 {
                     this.state.userData.orders?
                         this.state.userData.orders.map((data,index)=>{
-                            console.log(this.state.userData);
+                            
+                            if(this.state.userData.orders[index].status === 'delivered'){
+                            console.log(this.state.userData.orders[index].status);
                             return(
                                 <Card key={index} data-aos="fade-left" className="order-card">
                                     <CardHeader 
@@ -280,7 +318,63 @@ class DeliveryHome extends Component{
                                                 </CardActions>
                                             </Card>
                                 );
-                            })
+                          }
+                         else if(this.state.userData.orders[index].status === 'ordered'){
+                            console.log(this.state.userData.orders[index].status);
+                            return(
+                                <div className="signup-page" style={{marginTop:'25px',textAlign:'center'}}> 
+                                <Typography className="push-down" color ="inherit" variant="display2">
+                                  Your Current Orders  
+                                </Typography>
+                                
+                                <Card key={index} data-aos="fade-left" className="order-card">
+                                    <CardHeader 
+                                        title={data.shopName}
+                                        style={{paddingBottom: 0}}/>
+                                           
+                                        <CardContent style={{paddingBottom:0, paddingTop: 0}}>
+                                            {
+                                          
+                                                data.customerRating === 0 ? 
+                                                    <Typography variant="subheading" style={{color:'red'}}>
+                                                        <i> Customer not rated yet</i>
+                                                    
+                                                    </Typography>:
+
+      
+                                                    <Typography variant="subheading">
+                                                        Customer Rating: <strong>{data.customerRating} <span role="img" aria-label="star">⭐</span></strong>
+                                                    </Typography>
+                                            }
+                                                    <Typography variant="subheading" style={{fontSize:'10.5px'}}>
+                                                        <i>See details to rate customers.</i>
+                                                    </Typography>
+
+                                                    <Divider />
+                                                            
+                                        </CardContent>
+
+                                                <CardActions>
+                                                    <Button 
+                                                        fullWidth
+                                                        onClick={()=>{this.showDetails(index)}} 
+                                                        color="primary" 
+                                                        size="small">
+                                                        <Details style={{marginRight:'10px'}} />
+                                                        See details
+                                                    </Button>
+                                                </CardActions>
+                                            </Card>
+
+
+                                </div>
+
+                            )
+
+                         }
+                         else return null;  
+                    })
+                        
                     :
                      <Typography variant="subheading" className="no-orders">{this.state.userData.ordersMesage}
                      </Typography>
@@ -290,6 +384,9 @@ class DeliveryHome extends Component{
             </div>
 
             <Divider />
+            
+            {/* View Past Order Details */}
+
             <Dialog 
                     onClose={()=>{this.hideDetails(false)}} 
                     open={this.state.showDetails} 
@@ -300,8 +397,8 @@ class DeliveryHome extends Component{
                     this.state.showDetails ?
                     <div>                        
                     {
-                        this.state.processing?
-                        <LinearProgress />:null
+                        //this.state.processing?
+                        //<LinearProgress />:null
                     }
                         <DialogTitle
                             children={
@@ -336,7 +433,7 @@ class DeliveryHome extends Component{
                                             userData: old,
                                             processing: true
                                         })
-                                        if (e.target.value !== 0) this.updateCustomer(this.state.selectedIndex);
+                                        if (Number(e.target.value) !== 0) this.updateCustomer2(this.state.selectedIndex);
                                         else this.setState({processing:false});
                                     }}
                                 >   
@@ -355,11 +452,16 @@ class DeliveryHome extends Component{
                                 </Typography>
 
                             }
+                              
+                            
+
+
                          
                         </DialogContent>
                     </div>:
-                    <div></div>
+                    <div></div> 
                 }
+<<<<<<< HEAD
                 </Dialog>   
 
                  {/*=============CURRENT ORDERS=============*/}
@@ -395,6 +497,11 @@ class DeliveryHome extends Component{
                         </CardContent>
                     </Card>  
                 </div>
+=======
+                </Dialog>
+
+                
+>>>>>>> 0ce8bb262c4c77b62fc43dcc638c948fa3ff6378
         </div>
 
         );
