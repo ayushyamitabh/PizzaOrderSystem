@@ -179,14 +179,14 @@ class CookHome extends Component {
                           })
                           if(found === 0){
                               exists.push(this.state.pizzaID[i]);
-                              var shopPizzaRef = firebase.database().ref(`Shops/${this.state.shopUID}/pizzas`);
-                              shopPizzaRef.set(exists);
-                              this.setState({
-                                  notify: true,
-                                  notifyMsg: "Your 🍕 toppings has been added to the shop!"
-                            })
                           }
                       }
+                      var shopPizzaRef = firebase.database().ref(`Shops/${this.state.shopUID}/pizzas`);
+                      shopPizzaRef.set(exists);
+                      this.setState({
+                          notify: true,
+                          notifyMsg: "Your 🍕 toppings has been added to the shop!"
+                    })
                   }
                   else {
                       firebase.database().ref(`Shops/${this.state.shopUID}/pizzas`).set(this.state.pizzaID);
