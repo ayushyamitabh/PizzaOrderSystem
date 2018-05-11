@@ -237,12 +237,14 @@ class Home extends Component {
                                     </Avatar>
                                     <ListItemText primary="Our GitHub Repository"/>
                                 </ListItem>
+                                {/*
                                 <ListItem button>
                                     <Avatar>
                                         <App />
                                     </Avatar>
                                     <ListItemText primary="Get Our App"/>
                                 </ListItem>
+                                */}
                                 <Divider />
                                 <ListItem button component='a' href="mailto:tagmhaxt@gmail.com">
                                     <Avatar>
