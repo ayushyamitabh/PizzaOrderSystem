@@ -194,21 +194,45 @@ class DeliveryHome extends Component{
     //     })
     // }
 
-    updateCustomer2(index){
+    updateCustomer2(index, rating){
+        this.setState({processing:true})
         const object = {
             cuid: this.state.userData.orders[index].cuid,
             oid: this.state.userData.orderList[index],
-            rating: this.state.userData.orders[index].customerRating,
+            rating: Number(rating),
         };
-        axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/rateCustomer',object)
-        .then((completed)=>{
-            this.notify(completed.data.message);
-            this.setState({processing:false})
-        }).catch((err)=>{
-            this.notify(err.message);
-            this.setState({processing:false})
+        console.log('update', object);
+        firebase.database().ref(`Users/${object.cuid}`).once('value').then((usersnap)=>{
+            console.log('got');
+            if (usersnap.val()) {
+                var userData = usersnap.val();
+                if (userData.averageRating) {
+                    var a = userData.averageRating * userData.totalRatings;
+                    var b = a + object.rating;
+                    userData.totalRatings += 1;
+                    userData.averageRating = b / userData.totalRatings;
+                    firebase.database().ref(`Users/${object.cuid}`).set(userData).then(()=>{
+                        firebase.database().ref(`Orders/${object.oid}/customerRating`).set(object.rating).then(()=>{
+                            this.setState({
+                                processing: false
+                            })
+                            window.location.reload();
+                        })
+                    })
+                } else {
+                    userData.averageRating = rating;
+                    userData.totalRatings = 1;
+                    firebase.database().ref(`Users/${object.cuid}`).set(userData).then(()=>{
+                        firebase.database().ref(`Orders/${object.oid}/customerRating`).set(object.rating).then(()=>{
+                            this.setState({
+                                processing: false
+                            })
+                            window.location.reload();
+                        })
+                    })
+                }
+            }
         })
-        console.log(this.state.userData.orders[index].cuid);
     }
     
     showDetails(index){
@@ -428,7 +452,7 @@ class DeliveryHome extends Component{
                                             userData: old,
                                             processing: true
                                         })
-                                        if (Number(e.target.value) !== 0) this.updateCustomer2(this.state.selectedIndex);
+                                        if (Number(e.target.value) !== 0) this.updateCustomer2(this.state.selectedIndex, e.target.value);
                                         else this.setState({processing:false});
                                     }}
                                 >   
