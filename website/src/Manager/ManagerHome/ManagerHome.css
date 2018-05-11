@@ -1,0 +1,12 @@
+.manager-header{
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.manager-header .manager-avatar{
+    width: 70px;
+    height: 70px;
+    margin-right: 20px;
+}

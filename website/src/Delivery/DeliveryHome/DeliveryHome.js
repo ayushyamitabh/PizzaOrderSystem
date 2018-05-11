@@ -226,16 +226,8 @@ class DeliveryHome extends Component{
     }
    
     render() {
-<<<<<<< HEAD
-        const cardDescription = {
-        maxWidth: 345,
-        border: '5px solid black',      
-};
-                         {/*=============DELIVERER HOME PAGE=============*/}
-=======
     
         
->>>>>>> 0ce8bb262c4c77b62fc43dcc638c948fa3ff6378
         return ( 
             // Welcome Title
             <div style={{padding:'50px 100px'}}>
@@ -248,6 +240,7 @@ class DeliveryHome extends Component{
                         
                         <Typography variant="display2">
                             Welcome, {this.state.user.displayName}  
+                            
                         </Typography>
                         <Button size="small"><User style={{marginRight:'5px'}} />Account</Button>
                         <Button onClick={()=>{firebase.auth().signOut();}} size="small"><Logout style={{marginRight:'5px'}}/>signout</Button>
@@ -461,7 +454,6 @@ class DeliveryHome extends Component{
                     </div>:
                     <div></div> 
                 }
-<<<<<<< HEAD
                 </Dialog>   
 
                  {/*=============CURRENT ORDERS=============*/}
@@ -497,11 +489,6 @@ class DeliveryHome extends Component{
                         </CardContent>
                     </Card>  
                 </div>
-=======
-                </Dialog>
-
-                
->>>>>>> 0ce8bb262c4c77b62fc43dcc638c948fa3ff6378
         </div>
 
         );

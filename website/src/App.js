@@ -4,6 +4,7 @@ import createHistory from 'history/createBrowserHistory';
 import DeliveryRoutes from './Delivery/DeliveryRoutes.js';
 import CookRoutes from './Cook/CookRoutes.js';
 import CustomerRoutes from './Customer/CustomerRoutes.js';
+import ManagerRoutes from './Manager/ManagerRoutes.js';
 import Home from './Home/Home.js';
 import Signup from './Home/Signup/Signup.js';
 import AddShop from './Home/AddShop/AddShop.js';
@@ -99,6 +100,7 @@ class App extends Component {
                     <Route path="/cook" component={CookRoutes} />
                     <Route path="/customer" component={CustomerRoutes} />
                     <Route path="/guest" component={GuestRoutes} />
+                    <Route path="/manager" component={ManagerRoutes} />
                     <Route component={NotFound} />
                 </Switch>
                 </div>
