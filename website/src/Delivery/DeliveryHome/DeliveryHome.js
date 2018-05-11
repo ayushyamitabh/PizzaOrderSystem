@@ -226,16 +226,11 @@ class DeliveryHome extends Component{
     }
    
     render() {
-<<<<<<< HEAD
         const cardDescription = {
         maxWidth: 345,
         border: '5px solid black',      
 };
                          {/*=============DELIVERER HOME PAGE=============*/}
-=======
-    
-        
->>>>>>> 0ce8bb262c4c77b62fc43dcc638c948fa3ff6378
         return ( 
             // Welcome Title
             <div style={{padding:'50px 100px'}}>
@@ -319,7 +314,7 @@ class DeliveryHome extends Component{
                                             </Card>
                                 );
                           }
-                         else if(this.state.userData.orders[index].status === 'ordered'){
+                         else if(this.state.userData.orders[index].status === 'accepted'){
                             console.log(this.state.userData.orders[index].status);
                             return(
                                 <div className="signup-page" style={{marginTop:'25px',textAlign:'center'}}> 
@@ -461,7 +456,6 @@ class DeliveryHome extends Component{
                     </div>:
                     <div></div> 
                 }
-<<<<<<< HEAD
                 </Dialog>   
 
                  {/*=============CURRENT ORDERS=============*/}
@@ -484,7 +478,7 @@ class DeliveryHome extends Component{
 
 
 
-                <div className="column" data-aos ="flip-up"> 
+                {/* <div className="column" data-aos ="flip-up"> 
                     <Card  data-aos ="flip-up" style ={cardDescription} >
                         <CardContent>
                             <Typography gutterBottom variant="headline" component= "h2">
@@ -496,12 +490,7 @@ class DeliveryHome extends Component{
                                 </form>
                         </CardContent>
                     </Card>  
-                </div>
-=======
-                </Dialog>
-
-                
->>>>>>> 0ce8bb262c4c77b62fc43dcc638c948fa3ff6378
+                </div> */}
         </div>
 
         );
