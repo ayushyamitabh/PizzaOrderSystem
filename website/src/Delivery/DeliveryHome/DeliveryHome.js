@@ -342,9 +342,6 @@ class DeliveryHome extends Component{
                             console.log(this.state.userData.orders[index].status);
                             return(
                                 <div className="signup-page" style={{marginTop:'25px',textAlign:'center'}}> 
-                                <Typography className="push-down" color ="inherit" variant="display2">
-                                  Your Current Orders  
-                                </Typography>
                                 
                                 <Card key={index} data-aos="fade-left" className="order-card">
                                     <CardHeader 
@@ -470,9 +467,20 @@ class DeliveryHome extends Component{
                                     </strong>
                                 </Typography>
 
+                            }                           
+                            {
+                                this.state.userData.orders[this.state.selectedIndex].status !== 'delivered'?
+                                <Button variant="raised" color="secondary"
+                                    onClick={()=>{
+                                        firebase.database().ref(`Orders/${this.state.userData.orders[this.state.selectedIndex].oid}/status`).set('delivered').then(()=>{
+                                            window.location.reload();
+                                        })
+                                    }}
+                                > 
+                                    Mark as delivered
+                                </Button>
+                                :null
                             }
-                              
-                            
 
 
                          

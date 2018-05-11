@@ -302,12 +302,13 @@ class ManagerHome extends Component{
                                     }}
                                 >
                                     <MenuItem value={''}><i>Choose a deliverer</i></MenuItem>
-                                    {
+                                    {   this.state.shopData.deliverer?
                                         this.state.shopData.delivererData.map((deliverer, index)=>{
                                             return(
                                                 <MenuItem key={`deliverer${index}`} value={this.state.shopData.deliverer[index]}>{deliverer.name}</MenuItem>
                                             );
-                                        })
+                                        }):
+                                        null
                                     }
                                 </TextField>
                             </DialogContent>
