@@ -314,7 +314,7 @@ class DeliveryHome extends Component{
                                             </Card>
                                 );
                           }
-                         else if(this.state.userData.orders[index].status === 'ordered'){
+                         else if(this.state.userData.orders[index].status === 'accepted'){
                             console.log(this.state.userData.orders[index].status);
                             return(
                                 <div className="signup-page" style={{marginTop:'25px',textAlign:'center'}}> 
@@ -478,7 +478,7 @@ class DeliveryHome extends Component{
 
 
 
-                <div className="column" data-aos ="flip-up"> 
+                {/* <div className="column" data-aos ="flip-up"> 
                     <Card  data-aos ="flip-up" style ={cardDescription} >
                         <CardContent>
                             <Typography gutterBottom variant="headline" component= "h2">
@@ -490,7 +490,7 @@ class DeliveryHome extends Component{
                                 </form>
                         </CardContent>
                     </Card>  
-                </div>
+                </div> */}
         </div>
 
         );
