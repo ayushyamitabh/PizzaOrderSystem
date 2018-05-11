@@ -226,8 +226,11 @@ class DeliveryHome extends Component{
     }
    
     render() {
-    
-        
+        const cardDescription = {
+        maxWidth: 345,
+        border: '5px solid black',      
+};
+                         {/*=============DELIVERER HOME PAGE=============*/}
         return ( 
             // Welcome Title
             <div style={{padding:'50px 100px'}}>
@@ -240,7 +243,6 @@ class DeliveryHome extends Component{
                         
                         <Typography variant="display2">
                             Welcome, {this.state.user.displayName}  
-                            
                         </Typography>
                         <Button size="small"><User style={{marginRight:'5px'}} />Account</Button>
                         <Button onClick={()=>{firebase.auth().signOut();}} size="small"><Logout style={{marginRight:'5px'}}/>signout</Button>
