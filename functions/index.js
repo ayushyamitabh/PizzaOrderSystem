@@ -330,7 +330,7 @@ exports.placeOrder = functions.https.onRequest((req,res)=>{
                     cuid: req.body.cuid,
                     customerRating: 0,
                     delivererRating: 0,
-                    oid: `order${req.body.orderNumber}`,
+                    oid: `orderID${req.body.orderNumber}`,
                     pizzaRatings: PIZZA_RATINGS,
                     status: 'ordered',
                     total: req.body.cart.total,

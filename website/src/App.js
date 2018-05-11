@@ -20,7 +20,7 @@ class App extends Component {
         this.state = {
             loggedIn: false,
             userType: null,
-            lastLocation: ''
+            lastLocation: 'init',
         };
     }
     componentDidMount() {

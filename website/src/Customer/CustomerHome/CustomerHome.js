@@ -427,7 +427,7 @@ export default class CustomerHome extends Component{
                         })
                         restraunts.push(tempMarker);
                     })
-                    customerMap.fitBounds(bounds);
+                    if (shops.length > 0) customerMap.fitBounds(bounds);
                     this.setState({
                         processing: false
                     })
@@ -1130,6 +1130,16 @@ export default class CustomerHome extends Component{
                                                         <strong>Total: </strong> ${data.total.toFixed(2)}
                                                     </Typography>
                                                 </CardContent>
+                                                <CardActions>
+                                                    <Button 
+                                                        fullWidth
+                                                        onClick={()=>{this.props.history.push(`/guest/view/${data.oid}`)}} 
+                                                        color="secondary" 
+                                                        size="small">
+                                                        <Details style={{marginRight:'10px'}} />
+                                                        Track Order
+                                                    </Button>
+                                                </CardActions>
                                             </Card>
                                         );
                                     })
@@ -1299,7 +1309,7 @@ export default class CustomerHome extends Component{
                                     title="Customize Your Pizzas"
                                     subheader="Draw on your pizzas 🎨🖌"
                                     style={{paddingBottom:0}}
-                                />                                
+                                />
                                 <CardContent style={{paddingTop:0}}>
                                     <Divider className="push-down"/>
                                     <Typography variant="caption" className="push-down"> 
