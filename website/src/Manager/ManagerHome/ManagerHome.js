@@ -285,7 +285,18 @@ class ManagerHome extends Component{
                                             old.duid = e.target.value;
                                             old.status = 'accepted';
                                             firebase.database().ref(`Orders/${this.state.selectedOrder.oid}`).set(old).then(()=>{
-                                                window.location.reload();
+                                                firebase.database().ref(`Users/${e.target.value}/orders`).once('value').then((snap)=>{
+                                                    if(snap.val()) {
+                                                        var dorders = snap.val();
+                                                        dorders.push(this.state.selectedOrder.oid);
+                                                        firebase.database().ref(`Users/${e.target.value}/orders`).set(dorders).then(()=>{
+                                                            window.location.reload();
+                                                        })
+                                                    } else {
+                                                        firebase.database().ref(`Users/${e.target.value}/orders`).set([this.state.selectedOrder.oid]).then(()=>{
+                                                            window.location.reload();
+                                                        })                                                    }
+                                                })
                                             })
                                         }
                                     }}
