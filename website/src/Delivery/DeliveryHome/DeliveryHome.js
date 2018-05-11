@@ -78,6 +78,7 @@ class DeliveryHome extends Component{
         this.handleSubmit = this.handleSubmit.bind(this);
         this.updateCustomer = this.updateCustomer.bind(this);
         this.addRating = this.addRating.bind(this);
+        this.updateCustomer2=this.updateCustomer2.bind(this);
   }
     
     handleChange(e) {
@@ -199,6 +200,23 @@ class DeliveryHome extends Component{
                 })
             }                                                         
         })
+    }
+
+    updateCustomer2(index){
+        const object = {
+            cuid: this.state.userData.orders[index].cuid,
+            oid: this.state.userData.orderList[index],
+            odata: this.state.userData.orders[index]
+        };
+        axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/rateCustomer',object)
+        .then((completed)=>{
+            this.notify(completed.data.message);
+            this.setState({processing:false})
+        }).catch((err)=>{
+            this.notify(err.message);
+            this.setState({processing:false})
+        })
+        console.log(this.state.userData.orders[index].cuid);
     }
     
     showDetails(index){
@@ -416,7 +434,7 @@ class DeliveryHome extends Component{
                                             userData: old,
                                             processing: true
                                         })
-                                        if (e.target.value !== 0) this.updateCustomer(this.state.selectedIndex);
+                                        if (e.target.value !== 0) this.updateCustomer2(this.state.selectedIndex);
                                         else this.setState({processing:false});
                                     }}
                                 >   
@@ -436,106 +454,13 @@ class DeliveryHome extends Component{
 
                             }
                                 <Button fullWidth color="secondary" > Submit Rating</Button>
-                             {/* {
-                                Object.keys(this.state.userData.orders[this.state.selectedIndex].pizzaRatings).map((key, index)=>{
-                                    var pizza = this.state.userData.orders[this.state.selectedIndex].pizzaRatings[key];
-                                    if (pizza.rating === 0){
-                                        return(
-                                            <TextField 
-                                                disabled={this.state.processing}
-                                                className="push-down"
-                                                key={`pizza${index}`}
-                                                select
-                                                fullWidth
-                                                label={`Rate ${pizza.name}`}
-                                                value={pizza.rating}
-                                                onChange={(e)=>{
-                                                    var old = this.state.userData;
-                                                    old.orders[this.state.selectedIndex].pizzaRatings[key].rating = e.target.value;
-                                                    this.setState({
-                                                        userData: old,
-                                                        processing: true
-                                                    })
-                                                    if (e.target.value !== 0) this.updatePizza(this.state.selectedIndex, key);
-                                                    else this.setState({processing:false});
-                                                }}
-                                            >
-                                                <MenuItem value={0}><i>Choose a rating</i></MenuItem>
-                                                <MenuItem value={5}><span role="img" aria-label="star">⭐⭐⭐⭐⭐(5) </span></MenuItem>
-                                                <MenuItem value={4}><span role="img" aria-label="star">⭐⭐⭐⭐(4) </span></MenuItem>
-                                                <MenuItem value={3}><span role="img" aria-label="star">⭐⭐⭐(3) </span></MenuItem>
-                                                <MenuItem value={2}><span role="img" aria-label="star">⭐⭐(2) </span></MenuItem>
-                                                <MenuItem value={1}><span role="img" aria-label="star">⭐(1) </span></MenuItem>
-                                            </TextField>
-                                        );
-                                    } else {
-                                        return(
-                                            <Typography variant="subheading" className="push-down" key={`pizza${index}`}>
-                                                {pizza.name} Rating:&nbsp; 
-                                                <strong>
-                                                {pizza.rating} <span role="img" aria-label="star">⭐</span>
-                                                </strong>
-                                                {
-                                                    pizza.rating <=3 ?                                                    
-                                                        pizza.complaint?
-                                                        <TextField 
-                                                            fullWidth
-                                                            multiline
-                                                            label={`Comment for ${pizza.name}`}
-                                                            disabled
-                                                            rowsMax="2"
-                                                            value={pizza.complaint}
-                                                        />:
-                                                        <div>
-                                                            <TextField 
-                                                                fullWidth
-                                                                multiline
-                                                                label={`Comment for ${pizza.name}`}
-                                                                rowsMax="2"
-                                                                id={`pizzaComplaint-${key}`}
-                                                            />
-                                                            <Button 
-                                                                fullWidth 
-                                                                color="secondary"
-                                                                onClick={
-                                                                    ()=>{
-                                                                        var value = document.getElementById(`pizzaComplaint-${key}`).value;
-                                                                        if(value && value !== ""){
-                                                                            var old = this.state.userData;
-                                                                            old.orders[this.state.selectedIndex].pizzaRatings[key].complaint = value;
-                                                                            this.setState({
-                                                                                userData: old
-                                                                            });
-                                                                            firebase.database().ref(`Orders/${this.state.userData.orderList[this.state.selectedIndex]}/`)
-                                                                            .set(this.state.userData.orders[this.state.selectedIndex])
-                                                                            .then(()=>{
-                                                                                this.notify("We'll let the shop know what went wrong 👍");
-                                                                            }).catch(()=>{
-                                                                                this.notify("Couldn't save your comment, please try again in a bit.");
-                                                                            })
-                                                                        } else {
-                                                                            this.notify("You can't save an empty comment.");
-                                                                        }
-                                                                    }
-                                                                }
-                                                            >
-                                                                <Comment style={{marginRight:'10px'}}/>
-                                                                Save Comment
-                                                            </Button>
-                                                        </div>
-                                                    :null
-                                                }
-                                            </Typography>
-                                        );
-                                    }
-                                })
-                            }  */}
+                            
 
 
                          
                         </DialogContent>
                     </div>:
-                    <div></div>
+                    <div></div> 
                 }
                 </Dialog>
 
