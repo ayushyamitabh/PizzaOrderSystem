@@ -1,11 +1,11 @@
 import React, {Component} from 'react';
 import './CookHome.css';
 import * as firebase from 'firebase';
-import {AppBar,
+import {
         Typography,
-        Toolbar,
+        
         Button} from 'material-ui';
-import { Link } from 'react-router-dom';
+
 
 class CookHome extends Component {
     constructor(props) {

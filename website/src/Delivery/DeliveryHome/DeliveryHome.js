@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import './DeliveryHome.css';
-import { BrowserRouter as Router,Redirect, Route, Switch,Link} from 'react-router-dom';
+
 import * as firebase from 'firebase'
 import {Avatar,
         Button,
@@ -14,22 +14,14 @@ import {Avatar,
         DialogContent,
         DialogContentText,
         IconButton, 
-        InputAdornment,
-        LinearProgress, 
-        List,
-        ListItem,
-        ListItemText,
-        MenuItem,
-        Snackbar, 
+        MenuItem, 
         TextField, 
         Typography } from 'material-ui';
-import MenuIcon from 'material-ui-icons/Menu';
 import Logout from 'material-ui-icons/ExitToApp';
 import User from 'material-ui-icons/Face';
 import Details from 'material-ui-icons/LibraryBooks';
 import axios from 'axios';
 import Close from 'material-ui-icons/Close';
-import Comment from 'material-ui-icons/Comment';
 
 class DeliveryHome extends Component{
   constructor(props) {
@@ -76,7 +68,7 @@ class DeliveryHome extends Component{
         this.hideDetails = this.hideDetails.bind(this);
         this.handleChange = this.handleChange.bind(this);
         this.handleSubmit = this.handleSubmit.bind(this);
-        this.updateCustomer = this.updateCustomer.bind(this);
+       
         this.addRating = this.addRating.bind(this);
         this.updateCustomer2=this.updateCustomer2.bind(this);
   }
@@ -182,31 +174,31 @@ class DeliveryHome extends Component{
 
 
     
-    updateCustomer(index){      
-        const uid = this.state.userData.orders[index].uid;
-        firebase.database().ref(`Users/${uid}`).once('value').then ((snap) =>{
-            if(snap.val()){
-                var customerData = snap.val();
-                var a = customerData.averageRating * customerData.ratingCount;
-                var b = a + this.state.userData.orders[index].customerRating;
-                var c = b / (customerData.ratingCount +1);
-                customerData.averageRating = c;
-                customerData.ratingCount +=1;
-                firebase.database().ref(`Users/$(uid)`).set(customerData).then (()=>{firebase.database().ref(`Orders/${this.state.userData.orderList[index]}`).set(this.state.userData.orders[index]).then(()=>{
-                        this.setState({
-                            processing:false                
-                        })
-                    })
-                })
-            }                                                         
-        })
-    }
+    // updateCustomer(index){      
+    //     const uid = this.state.userData.orders[index].uid;
+    //     firebase.database().ref(`Users/${uid}`).once('value').then ((snap) =>{
+    //         if(snap.val()){
+    //             var customerData = snap.val();
+    //             var a = customerData.averageRating * customerData.ratingCount;
+    //             var b = a + this.state.userData.orders[index].customerRating;
+    //             var c = b / (customerData.ratingCount +1);
+    //             customerData.averageRating = c;
+    //             customerData.ratingCount +=1;
+    //             firebase.database().ref(`Users/$(uid)`).set(customerData).then (()=>{firebase.database().ref(`Orders/${this.state.userData.orderList[index]}`).set(this.state.userData.orders[index]).then(()=>{
+    //                     this.setState({
+    //                         processing:false                
+    //                     })
+    //                 })
+    //             })
+    //         }                                                         
+    //     })
+    // }
 
     updateCustomer2(index){
         const object = {
             cuid: this.state.userData.orders[index].cuid,
             oid: this.state.userData.orderList[index],
-            odata: this.state.userData.orders[index]
+            rating: this.state.userData.orders[index].customerRating,
         };
         axios.post('https://us-central1-pos-tagmhaxt.cloudfunctions.net/rateCustomer',object)
         .then((completed)=>{
@@ -234,10 +226,7 @@ class DeliveryHome extends Component{
     }
    
     render() {
-        const cardDescription = {
-        maxWidth: 345,
-        border: '5px solid black',      
-};
+    
         
         return ( 
             // Welcome Title
@@ -434,7 +423,7 @@ class DeliveryHome extends Component{
                                             userData: old,
                                             processing: true
                                         })
-                                        if (e.target.value !== 0) this.updateCustomer2(this.state.selectedIndex);
+                                        if (Number(e.target.value) !== 0) this.updateCustomer2(this.state.selectedIndex);
                                         else this.setState({processing:false});
                                     }}
                                 >   
@@ -453,7 +442,7 @@ class DeliveryHome extends Component{
                                 </Typography>
 
                             }
-                                <Button fullWidth color="secondary" > Submit Rating</Button>
+                              
                             
 
 
