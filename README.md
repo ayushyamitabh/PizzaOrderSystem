@@ -1,6 +1,9 @@
 # Pizza Order System
 Group project for **CSC 322 @ CCNY** for Professor Jie Wei
 
+#### ARCHIVED - ALL APIs HAVE BEEN DISABLED
+*Exposed API Keys are not an issue*
+
 ------
 #### Project By:
 1. Ayushya Amitabh
